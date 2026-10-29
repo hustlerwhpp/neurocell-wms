@@ -1,173 +1,119 @@
 <!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NeuroCell WMS — кликабельный прототип</title>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NeuroCell WMS — прототип</title>
 <style>
-*{box-sizing:border-box} body{margin:0;background:#0b0b0b;color:#f2f2f2;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-a{color:#facc15} .wrap{max-width:1280px;margin:0 auto;padding:16px}
-.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
-.logo{font-weight:800;letter-spacing:.02em} .logo span{color:#22c55e}
-.nav{display:flex;gap:6px;flex-wrap:wrap} .nav button{background:#1f1f1f;color:#eee;border:1px solid #333;border-radius:999px;padding:8px 12px;cursor:pointer}
-.nav button.active{background:#facc15;color:#111;border-color:#facc15;font-weight:700}
-.screen{display:none;background:#121212;border:1px solid #2a2a2a;border-radius:20px;padding:22px;min-height:640px}
-.screen.active{display:block}
-.terminal{border:3px solid #333;border-radius:16px;padding:18px}
-.terminal.green{border:16px solid #22c55e;background:#06281a}
-.terminal.red{border:3px solid #ef4444;background:#3d0a0a;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{background:#3d0a0a}50%{background:#7f1d1d}}
-.bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#d4d4d4;font-size:14px;margin-bottom:18px}
-.bar b{color:#fff} .pill{display:inline-block;background:#262626;border:1px solid #444;border-radius:999px;padding:6px 12px}
-.pill.off{background:#713f12;border-color:#facc15;color:#fde68a}
-h1{font-size:38px;line-height:1.05;margin:8px 0 12px} h2{font-size:28px;margin:6px 0 12px} p{color:#d4d4d4;line-height:1.5}
-.big{font-size:56px;font-weight:900;letter-spacing:.06em} .yellow{background:#facc15;color:#111;border-radius:12px;padding:10px 18px;display:inline-block;font-size:40px;font-weight:900}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}
-.card{background:#1e1e1e;border:1px solid #333;border-radius:16px;padding:16px} .card b{font-size:28px}
-.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
-button.btn{min-height:72px;min-width:72px;border:0;border-radius:14px;padding:14px 22px;font-size:18px;font-weight:800;cursor:pointer;background:#facc15;color:#111}
-button.btn.ghost{background:#262626;color:#fff;border:1px solid #444}
-button.btn.green{background:#22c55e;color:#06281a} button.btn.red{background:#ef4444;color:#fff}
-button.btn:disabled{opacity:.45;cursor:not-allowed}
-input{width:100%;background:#1e1e1e;border:1px solid #444;color:#fff;border-radius:12px;padding:16px;font-size:18px;margin:8px 0}
-label{font-size:14px;color:#a3a3a3} .err{color:#f87171;font-weight:700} .ok{color:#4ade80;font-weight:700}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#fff;color:#111;padding:14px 20px;border-radius:999px;font-weight:800;display:none;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
-.modal.open{display:flex} .box{background:#171717;border:1px solid #444;border-radius:20px;padding:24px;max-width:560px;width:100%}
-.view{height:180px;border:2px dashed #555;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#a3a3a3;text-align:center;padding:16px}
-.progress{height:14px;background:#333;border-radius:999px;overflow:hidden} .progress i{display:block;height:100%;width:0;background:#22c55e;transition:width 1.5s}
-.note{font-size:13px;color:#a3a3a3;margin-top:16px}
-table{width:100%;border-collapse:collapse} td,th{border-bottom:1px solid #2a2a2a;padding:10px;text-align:left}
-@media(max-width:700px){h1{font-size:30px}.big{font-size:38px}.yellow{font-size:30px}.screen{min-height:0}}
-</style>
-</head>
-<body>
+:root{--bg:#0e0f12;--panel:#16181d;--panel2:#1d2027;--line:#262a33;--txt:#f2f4f7;--mut:#9aa3b2;--yel:#f5c518;--grn:#22c55e;--red:#ef4444;--org:#f59e0b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
+body.big{font-size:18px}
+header{position:sticky;top:0;z-index:20;background:rgba(14,15,18,.95);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1240px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.logo{font-weight:900;letter-spacing:.02em}.logo i{color:var(--grn);font-style:normal}.logo small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.pill{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 12px;font-size:13px;color:#d7dce4}
+.pill.warn{background:#3a2a07;border-color:var(--yel);color:#fde68a}
+.wrap{max-width:1240px;margin:0 auto;padding:18px 16px 40px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}nav button{background:var(--panel);color:#e5e9f0;border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
+nav button.on{background:var(--yel);color:#111;border-color:var(--yel)}
+.view{display:none}.view.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.kpi b{font-size:32px;display:block;margin-top:4px}.kpi span{color:var(--mut);font-size:13px}
+h1{font-size:36px;margin:4px 0 10px;line-height:1.1}h2{font-size:24px;margin:4px 0 10px}p{color:#cbd2dc;line-height:1.55}
+label{color:var(--mut);font-size:13px}
+input,select{width:100%;background:#0f1115;border:1px solid var(--line);color:#fff;border-radius:12px;padding:14px 16px;font-size:17px;margin:6px 0 12px}
+.btn{min-height:64px;border:0;border-radius:13px;padding:14px 20px;font-size:17px;font-weight:800;cursor:pointer;background:var(--yel);color:#111}
+.btn.ghost{background:var(--panel2);color:#fff;border:1px solid var(--line)}.btn.green{background:var(--grn);color:#06281a}.btn.red{background:var(--red);color:#fff}
+.btn:disabled{opacity:.45}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+table{width:100%;border-collapse:collapse}td,th{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-size:13px}
+.tag{display:inline-block;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700}.ok{background:#052e16;color:#4ade80}.bad{background:#3f0d0d;color:#fca5a5}.q{background:#262a33;color:#e5e9f0}
+.term{border:2px solid var(--line);border-radius:18px;padding:20px;background:#101216}
+.term.green{border:12px solid var(--grn);background:#052e16}.term.red{border:2px solid var(--red);background:#3f0d0d;animation:pl 1s infinite}
+@keyframes pl{50%{background:#7f1d1d}}
+.bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--mut);font-size:14px}
+.cellno{font-size:64px;font-weight:900;letter-spacing:.05em}.badge{background:var(--yel);color:#111;border-radius:10px;padding:8px 16px;font-size:28px;font-weight:900;display:inline-block}
+.rack{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:14px 0}.cell{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 6px;text-align:center;cursor:pointer;font-weight:800}.cell.tgt{outline:3px solid var(--yel)}.cell.err{outline:3px solid var(--red);color:#fca5a5}
+.scan{height:170px;border:2px dashed #4b5563;border-radius:16px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mut);padding:16px;position:relative;overflow:hidden}
+.scan i{position:absolute;left:0;right:0;height:3px;background:var(--grn);top:20%;animation:sc 1.6s infinite}@keyframes sc{50%{top:75%}}
+.err{color:#f87171;font-weight:700}.note{color:var(--mut);font-size:13px;margin-top:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}.modal.open{display:flex}.box{background:#17191f;border:1px solid var(--line);border-radius:18px;padding:22px;max-width:540px;width:100%}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#fff;color:#111;padding:13px 18px;border-radius:999px;font-weight:800;display:none;z-index:60}
+.prog{height:12px;background:#2a2e38;border-radius:999px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--grn);transition:width 1.2s}
+@media(max-width:700px){h1{font-size:28px}.cellno{font-size:44px}.badge{font-size:22px}.rack{grid-template-columns:repeat(4,1fr)}}
+</style></head><body>
+<header><div class="hwrap"><div class="logo">NeuroCell <i>WMS</i><small>Forklift Vision · Zero-Touch Scanning · 1С:WMS</small></div>
+<div><span class="pill" id="headUser">Не выполнен вход</span> <span class="pill" id="headWifi">Wi-Fi: OK</span> <span class="pill" id="headBuf">Буфер: 0</span></div></div></header>
 <div class="wrap">
-<div class="top">
-<div class="logo">NeuroCell <span>WMS</span> — прототип</div>
-<div class="nav" id="nav">
-<button data-go="login" class="active">Вход</button><button data-go="dash">Дашборд</button><button data-go="task">Терминал: задание</button><button data-go="route">Маршрут</button><button data-go="green">Зелёный</button><button data-go="red">Красный</button><button data-go="done">Готово</button><button data-go="settings">Настройки</button><button data-go="empty">Пусто</button>
-</div>
-</div>
-<p style="margin:0 0 12px;color:#a3a3a3">Демо по лабораторной №9. Данные демонстрационные: ричтрак №04, задание №4829, палета 4607012345678. Вверху — быстрое меню для показа, внутри экранов — рабочий сценарий.</p>
-<div style="margin-bottom:12px" class="row">
-<button class="btn ghost" style="min-height:48px" onclick="toggleWifi()" id="wifiBtn">Wi-Fi: OK · Синхронизация включена</button>
-<span class="pill" id="bufPill">Буфер: 0 палет</span>
-<span class="pill">Время: 14:22 · Смена: день</span>
-</div>
+<nav id="nav"><button data-v="login" class="on">Вход</button><button data-v="dash">Дашборд</button><button data-v="term">Терминал</button><button data-v="inc">Инциденты</button><button data-v="settings">Настройки</button></nav>
 
-<!-- LOGIN -->
-<section class="screen active" id="login">
-<h1>Вход в NeuroCell WMS</h1><p>Диспетчер и водитель ричтрака входят в одну систему. Для демо подойдёт любой PIN из 4 цифр.</p>
-<div style="max-width:480px">
-<label>Ричтрак</label><input value="Ричтрак №04" readonly>
+<section class="view on" id="login"><div class="card" style="max-width:560px"><h1>Вход в систему</h1><p>Водитель ричтрака и диспетчер работают в одной системе. Для прототипа подойдёт любой PIN из 4 цифр — он проверяется по длине, а не по базе.</p>
+<label>Ричтрак</label><select id="truck"><option>Ричтрак №04</option><option>Ричтрак №07</option><option>Ричтрак №11</option></select>
 <label>Сотрудник</label><input id="user" value="Алексей, водитель ричтрака">
-<label>PIN-код</label><input id="pin" inputmode="numeric" placeholder="Например, 4829">
+<label>PIN-код</label><input id="pin" inputmode="numeric" placeholder="4 цифры, например 4829">
 <p class="err" id="loginErr" style="display:none">Введите PIN из 4 цифр.</p>
-<div class="row"><button class="btn" onclick="doLogin()">Войти</button><button class="btn ghost" onclick="show('dash')">Я диспетчер — сразу на дашборд</button></div>
-<p class="note">Выход: на любом экране нажмите «Выход» — вернётесь сюда. Это экран выхода из системы.</p>
-</div>
-</section>
+<div class="row"><button class="btn" onclick="doLogin()">Войти</button><button class="btn ghost" onclick="loginAs('Диспетчер смены')">Войти как диспетчер</button></div>
+<p class="note">Выход — кнопка в настройках или в шапке дашборда. Состояние заданий при выходе сохраняется для показа.</p></div></section>
 
-<!-- DASHBOARD -->
-<section class="screen" id="dash">
-<h1>Дашборд диспетчера</h1><p>Обзор смены, очередь заданий и инциденты. Нажмите на активное задание, чтобы открыть терминал водителя.</p>
-<div class="grid">
-<div class="card"><div>Заданий в работе</div><b>14</b></div>
-<div class="card"><div>Выполнено за смену</div><b>86</b></div>
-<div class="card"><div>Ошибки ячеек</div><b style="color:#f87171">2</b></div>
-<div class="card"><div>В буфере при офлайне</div><b id="dashBuf">0</b></div>
-</div>
-<table><tr><th>Задание</th><th>Палета</th><th>Цель</th><th>Статус</th></tr>
-<tr><td><b>#4829</b></td><td>4607012345678</td><td>A-14-05</td><td><span class="ok">В работе</span></td></tr>
-<tr><td>#4830</td><td>4607012345685</td><td>A-14-07</td><td>В очереди</td></tr>
-<tr><td>#4828</td><td>4607012345609</td><td>B-02-03</td><td>Выполнено</td></tr></table>
-<div class="row"><button class="btn" onclick="show('task')">Открыть задание #4829 на терминале</button><button class="btn ghost" onclick="show('empty')">Показать пустое состояние</button><button class="btn ghost" onclick="show('settings')">Настройки</button><button class="btn ghost" onclick="show('login')">Выход</button></div>
-</section>
+<section class="view" id="dash"><h1>Дашборд смены</h1><p id="dashSub"></p>
+<div class="grid kpi" style="margin:14px 0">
+<div class="card"><span>В работе</span><b id="kActive">1</b></div><div class="card"><span>Выполнено за смену</span><b id="kDone">86</b></div><div class="card"><span>Ошибки ячеек</span><b id="kErr" style="color:#f87171">0</b></div><div class="card"><span>В буфере (офлайн)</span><b id="kBuf">0</b></div></div>
+<div class="card"><h2>Очередь заданий</h2><div id="taskTable"></div>
+<div class="row"><button class="btn" onclick="openCurrent()">Открыть текущее задание на терминале</button><button class="btn ghost" onclick="resetDemo()">Сбросить демо</button><button class="btn ghost" onclick="show('login')">Выход</button></div></div>
+<div class="card" style="margin-top:12px"><h2>Пустое состояние</h2><p id="emptyText">Когда очередь закончится, здесь будет сообщение «Заданий нет» — оно появляется автоматически после последнего задания.</p></div></section>
 
-<!-- TASK / CAPTURE -->
-<section class="screen" id="task"><div class="terminal">
-<div class="bar"><span><b>РИЧТРАК №04</b></span><span id="taskWifi">Wi-Fi: OK · БД: Синхр.</span><span>14:22</span></div>
-<h2>НОВОЕ ЗАДАНИЕ #4829</h2><p>ПОДХОД К ПАЛЕТОМЕСТУ: ЗОНА ПРИЕМКИ → <b style="color:#fff">МЕСТО P-04</b></p>
-<div class="view">Камера каретки: наведите вилы на палету.<br>Статус: ОЖИДАНИЕ ЗАХВАТА</div>
-<div class="row"><button class="btn green" onclick="capture()">Камера считала штрихкод — груз подтверждён</button><button class="btn ghost" onclick="openModal('damageModal')">Повреждён штрихкод</button><button class="btn ghost" onclick="show('dash')">Пауза смены</button></div>
-<p class="note">Zero-Touch: в реальной работе водитель не нажимает кнопок — камера считывает код сама. Здесь кнопка имитирует это событие для показа.</p>
-</div></section>
+<section class="view" id="term"><div class="card" style="padding:0;overflow:hidden"><div id="termBox" class="term">
+<div class="bar"><span><b style="color:#fff" id="tTruck">РИЧТРАК №04</b></span><span id="tWifi">Wi-Fi: OK · БД: Синхр.</span><span>14:22</span></div>
+<div id="termBody"></div></div></div>
+<div class="row"><button class="btn ghost" onclick="toggleWifi()" id="wifiBtn">Перейти в офлайн-режим</button><button class="btn ghost" onclick="show('dash')">На дашборд</button></div>
+<p class="note">Терминал 1280×800, тёмная тема #121212, кнопки не менее 72×72 для работы в перчатках. Зелёный — действие разрешено, красный — стой, проводка заблокирована.</p></section>
 
-<!-- ROUTE -->
-<section class="screen" id="route"><div class="terminal">
-<div class="bar"><span><b>РИЧТРАК №04</b></span><span id="routeWifi">Wi-Fi: OK</span><span>14:23</span></div>
-<p class="ok">ГРУЗ ИДЕНТИФИЦИРОВАН: ШК 4607012345678 (OK)</p>
-<h2>ЦЕЛЕВОЙ АДРЕС</h2>
-<p>РЯД 08 · ПРОЛЕТ 14 · ЯРУС 05 (высота около 9,2 м)</p>
-<p>ЦЕЛЕВАЯ ЯЧЕЙКА:</p><div class="big">A-14-05</div><br><span class="yellow">ЯРУС 05</span>
-<p>ПОДНИМАЙТЕ МАЧТУ К ЦЕЛЕВОЙ ПОЛКЕ</p>
-<div class="view">Видоискатель: прицельная рамка оптического захвата ячейки</div>
-<div class="row"><button class="btn green" onclick="show('green')">Навести на A-14-05 — верно</button><button class="btn red" onclick="show('red')">Навести на A-14-06 — ошибка</button></div>
-</div></section>
+<section class="view" id="inc"><div class="card"><h1>Инциденты</h1><p>Ошибки ячеек, повреждённые штрихкоды и офлайн-буфер фиксируются здесь и не теряются при выходе.</p><div id="incList"></div></div></section>
 
-<!-- GREEN -->
-<section class="screen" id="green"><div class="terminal green">
-<div class="bar"><span><b>РИЧТРАК №04</b></span><span>Распознан: A-14-05 = Цель: A-14-05</span><span>14:23</span></div>
-<h1 style="text-align:center">ЯЧЕЙКА ВЕРНА!</h1><p style="text-align:center;font-size:24px;color:#fff">ЗАВОДИТЕ ВИЛЫ</p>
-<p style="text-align:center">Детекция положения: вилы совмещены. Ожидание ввода (Optical Flow)…</p>
-<div class="row" style="justify-content:center"><button class="btn green" onclick="finish(true)">Ввести вилы и опустить груз</button><button class="btn ghost" onclick="show('route')">Вернуться к маршруту</button></div>
-</div></section>
-
-<!-- RED -->
-<section class="screen" id="red"><div class="terminal red">
-<h1>ВНИМАНИЕ! НЕСОВПАДЕНИЕ!</h1>
-<p style="color:#fff;font-size:20px">ТЕКУЩАЯ ПОЛКА: <b>A-14-06</b> — ошибка, смежный ярус<br>ТРЕБУЕТСЯ: <b>A-14-05</b></p>
-<p style="color:#fff"><b>ПРОВОДКА В 1С:WMS ЗАБЛОКИРОВАНА. НЕ СТАВЬТЕ ГРУЗ!</b><br>Опустите мачту на один ярус ниже (ярус 05).</p>
-<div class="row"><button class="btn ghost" onclick="show('route')">Пересканировать / исправить высоту</button><button class="btn" onclick="openModal('nfcModal')">Разблокировка через NFC бригадира</button></div>
-<p class="note">Кнопки «Игнорировать» в зоне прямого клика нет специально: по итогам теста сброс ошибки возможен только по NFC-карте бригадира или PIN-коду.</p>
-</div></section>
-
-<!-- DONE -->
-<section class="screen" id="done"><div class="terminal">
-<div class="bar"><span><b>РИЧТРАК №04</b></span><span id="doneWifi">Автономно: SQLite OK</span><span>14:24</span></div>
-<h1>РАЗМЕЩЕНИЕ ПОДТВЕРЖДЕНО</h1>
-<p>Палета <b style="color:#fff">4607012345678</b> успешно закреплена за <b style="color:#fff">A-14-05</b>.<br>Оптический поток: вилы выведены из полки, нагрузка снята.<br><span id="doneTx">Транзакция отправлена в WMS.</span></p>
-<div class="progress"><i id="prog"></i></div><p id="progText">Следующее задание — по кнопке ниже. В реальной системе автопереход занимает 1,5 секунды.</p>
-<div class="row"><button class="btn" onclick="nextTask()">К СЛЕДУЮЩЕМУ ЗАДАНИЮ →</button><button class="btn ghost" onclick="show('dash')">На дашборд</button></div>
-</div></section>
-
-<!-- SETTINGS -->
-<section class="screen" id="settings">
-<h1>Настройки терминала</h1><p>Звук, яркость и доступ. Изменения здесь — только для демо, в реальной системе часть настроек закрыта для водителя.</p>
-<div style="max-width:560px">
-<label>Громкость звукового сигнала</label><input type="range" min="0" max="100" value="80">
-<label>Яркость экрана</label><input type="range" min="20" max="100" value="90">
-<label><input type="checkbox" checked style="width:auto"> Дублировать цвет звуком (высокий тон — успех, низкий зуммер — ошибка)</label><br>
-<label><input type="checkbox" checked style="width:auto"> Антибликовый режим, крупный шрифт</label>
-<div class="row"><button class="btn" onclick="toast('Настройки сохранены')">Сохранить</button><button class="btn ghost" onclick="show('dash')">Назад</button><button class="btn ghost" onclick="show('login')">Выход</button></div>
-</div></section>
-
-<!-- EMPTY -->
-<section class="screen" id="empty">
-<h1>Заданий нет</h1><p>Очередь пуста. Новые задания из 1С:WMS появятся здесь автоматически.<br>Если задания должны быть, проверьте связь — при обрыве Wi-Fi терминал работает из буфера и не блокируется.</p>
-<div class="view">Нет активных заданий</div>
-<div class="row"><button class="btn" onclick="show('task')">Вернуться к заданию #4829</button><button class="btn ghost" onclick="show('dash')">На дашборд</button></div>
-</section>
+<section class="view" id="settings"><div class="card" style="max-width:620px"><h1>Настройки</h1>
+<label><input type="checkbox" id="setSound" checked style="width:auto"> Звуковая индикация: высокий тон — успех, низкий зуммер — ошибка</label><br><br>
+<label><input type="checkbox" id="setBig" style="width:auto"> Крупный шрифт терминала</label><br><br>
+<label>Яркость экрана</label><input type="range" id="setBright" min="60" max="100" value="95">
+<div class="row"><button class="btn" onclick="saveSettings()">Сохранить настройки</button><button class="btn ghost" onclick="show('dash')">Назад</button><button class="btn ghost" onclick="show('login')">Выход</button></div>
+<p class="note">Настройки сохраняются в браузере и применяются сразу, без перезагрузки страницы.</p></div></section>
 </div>
 
-<!-- MODALS -->
-<div class="modal" id="damageModal"><div class="box"><h2>Повреждён штрихкод</h2><p>Открыт видеовызов старшего диспетчера, переданы текущие снимки палеты. Водитель ждёт указания, груз не перемещается.</p><div class="row"><button class="btn" onclick="closeModal('damageModal');toast('Вызов диспетчера отправлен')">Вызвать диспетчера</button><button class="btn ghost" onclick="closeModal('damageModal')">Закрыть</button></div></div></div>
-<div class="modal" id="nfcModal"><div class="box"><h2>NFC-разблокировка</h2><p>Приложите карту бригадира к считывателю терминала или введите PIN бригадира. Это единственный путь сброса блокировки ошибочной ячейки.</p><input id="nfcPin" inputmode="numeric" placeholder="PIN бригадира, 4 цифры"><p class="err" id="nfcErr" style="display:none">Нужен PIN из 4 цифр.</p><div class="row"><button class="btn" onclick="doNfc()">Приложить карту / подтвердить</button><button class="btn ghost" onclick="closeModal('nfcModal')">Отмена</button></div></div></div>
+<div class="modal" id="damageModal"><div class="box"><h2>Повреждён штрихкод</h2><p>Открыт видеовызов старшего диспетчера, переданы текущие снимки палеты. Груз не перемещается до указания диспетчера.</p><div class="row"><button class="btn" onclick="addInc('Повреждён штрихкод','Палета '+cur().pallet);closeM('damageModal')">Вызвать диспетчера</button><button class="btn ghost" onclick="closeM('damageModal')">Закрыть</button></div></div></div>
+<div class="modal" id="nfcModal"><div class="box"><h2>NFC-разблокировка</h2><p>Приложите карту бригадира или введите его PIN. Это единственный путь сброса блокировки ошибочной ячейки — кнопки «Игнорировать» в прямом доступе нет.</p><input id="nfcPin" inputmode="numeric" placeholder="PIN бригадира, 4 цифры"><p class="err" id="nfcErr" style="display:none">Нужен PIN из 4 цифр.</p><div class="row"><button class="btn" onclick="doNfc()">Подтвердить NFC / PIN</button><button class="btn ghost" onclick="closeM('nfcModal')">Отмена</button></div></div></div>
 <div class="toast" id="toast"></div>
 <script>
-let offline=false, buf=0;
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.go===id));window.scrollTo(0,0)}
-document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>show(b.dataset.go));
-function toast(t){let e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',2800)}
-function openModal(id){document.getElementById(id).classList.add('open')} function closeModal(id){document.getElementById(id).classList.remove('open')}
-function doLogin(){let p=document.getElementById('pin').value.trim();if(!/^\d{4}$/.test(p)){document.getElementById('loginErr').style.display='block';return}document.getElementById('loginErr').style.display='none';toast('Вход выполнен');show('dash')}
-function capture(){toast('Груз подтверждён — зелёный статус');show('route')}
-function toggleWifi(){offline=!offline;let t=offline?'Автономно (SQLite) · Буфер работает':'Wi-Fi: OK · Синхронизация включена';document.getElementById('wifiBtn').textContent=t;['taskWifi','routeWifi','doneWifi'].forEach(id=>{let e=document.getElementById(id);if(e)e.textContent=offline?'Автономно (SQLite) · Буфер: '+buf+' палет':'Wi-Fi: OK'});if(offline){buf=3;updateBuf()}else{buf=0;updateBuf();toast('Связь восстановлена, буфер отправлен в WMS')}}
-function updateBuf(){document.getElementById('bufPill').textContent='Буфер: '+buf+' палет';document.getElementById('dashBuf').textContent=buf}
-function finish(ok){document.getElementById('prog').style.width='100%';document.getElementById('doneTx').textContent=offline?'Сохранено в локальный буфер. Отправится в WMS при восстановлении связи.':'Транзакция отправлена в WMS.';show('done')}
-function nextTask(){toast('Следующее задание #4830: цель A-14-07');show('task')}
-function doNfc(){let p=document.getElementById('nfcPin').value.trim();if(!/^\d{4}$/.test(p)){document.getElementById('nfcErr').style.display='block';return}closeModal('nfcModal');toast('NFC принято: блокировка снята для корректировки');show('green')}
-</script>
-</body>
-</html>
+let tasks=[
+ {id:4829,pallet:'4607012345678',place:'P-04',row:'08',aisle:'14',tier:'05',cell:'A-14-05',h:'9,2 м',status:'active'},
+ {id:4830,pallet:'4607012345685',place:'P-07',row:'08',aisle:'14',tier:'07',cell:'A-14-07',h:'12,1 м',status:'queue'},
+ {id:4831,pallet:'4607012345692',place:'P-02',row:'08',aisle:'15',tier:'03',cell:'A-15-03',h:'5,4 м',status:'queue'}];
+let curIdx=0, doneBase=86, errs=0, buf=0, offline=false, inc=[], stage='wait', userName='';
+let settings=JSON.parse(localStorage.getItem('nc_settings')||'{"sound":true,"big":false}');
+function cur(){return tasks[curIdx]} function toast(t){let e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',3000)}
+function show(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===id));window.scrollTo(0,0);if(id==='dash')renderDash();if(id==='inc')renderInc();if(id==='term')renderTerm()}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+function openM(id){document.getElementById(id).classList.add('open')}function closeM(id){document.getElementById(id).classList.remove('open')}
+function doLogin(){let p=document.getElementById('pin').value.trim();if(!/^\d{4}$/.test(p)){document.getElementById('loginErr').style.display='block';return}userName=document.getElementById('user').value||'Оператор';document.getElementById('headUser').textContent=userName+' · '+document.getElementById('truck').value;toast('Вход выполнен');show('dash')}
+function loginAs(r){userName=r;document.getElementById('headUser').textContent=r;show('dash')}
+function renderDash(){document.getElementById('dashSub').textContent='Смена: день · '+ (userName||'Оператор') +' · Статус системы: '+(offline?'автономно, буфер работает':'в сети, синхронизация включена');
+document.getElementById('kActive').textContent=tasks.filter(t=>t.status==='active').length;document.getElementById('kDone').textContent=doneBase;document.getElementById('kErr').textContent=errs;document.getElementById('kBuf').textContent=buf;
+let html='<table><tr><th>Задание</th><th>Палета</th><th>Цель</th><th>Статус</th></tr>'+tasks.map((t,i)=>'<tr><td><b>#'+t.id+'</b></td><td>'+t.pallet+'</td><td>'+t.cell+'</td><td>'+(t.status==='done'?'<span class="tag ok">Выполнено</span>':t.status==='active'?'<span class="tag q">В работе</span>':'<span class="tag q">В очереди</span>')+'</td></tr>').join('')+'</table>';
+if(tasks.every(t=>t.status==='done'))html+='<p><b>Заданий нет.</b> Очередь пуста, новые задания из 1С:WMS появятся автоматически. Для повторного показа нажмите «Сбросить демо».</p>';
+document.getElementById('taskTable').innerHTML=html;document.getElementById('emptyText').textContent=tasks.every(t=>t.status==='done')?'Сейчас очередь пуста — это и есть пустое состояние.':'Когда очередь закончится, здесь будет сообщение «Заданий нет» — оно появляется автоматически после последнего задания.'}
+function renderInc(){document.getElementById('incList').innerHTML=inc.length?inc.map(x=>'<p><b>'+x.t+'</b> — '+x.d+'</p>').join(''):'<p>Инцидентов пока нет. Ошибка ячейки или повреждённый штрихкод появятся здесь автоматически.</p>'}
+function addInc(t,d){inc.unshift({t:t,d:d});errs++;renderDash()}
+function openCurrent(){if(tasks.every(t=>t.status==='done')){toast('Очередь пуста');show('dash');return}stage='wait';show('term')}
+function renderTerm(){let t=cur(),box=document.getElementById('termBox');box.className='term';document.getElementById('tTruck').textContent=document.getElementById('truck').value.toUpperCase();document.getElementById('tWifi').textContent=offline?'Автономно (SQLite) · Буфер: '+buf:'Wi-Fi: OK · БД: Синхр.';
+let b=document.getElementById('termBody');
+if(stage==='wait')b.innerHTML='<h1>Задание #'+t.id+'</h1><p>ПОДХОД К ПАЛЕТОМЕСТУ: ЗОНА ПРИЕМКИ → <b style="color:#fff">МЕСТО '+t.place+'</b></p><div class="scan"><i></i>Камера каретки: наведите вилы на палету<br>Ожидание захвата</div><div class="row"><button class="btn green" onclick="capture()">Камера считала штрихкод</button><button class="btn ghost" onclick="openM(\'damageModal\')">Повреждён штрихкод</button></div><p class="note">Zero-Touch: в реальной работе водитель не нажимает кнопок. Здесь кнопка имитирует событие камеры для показа.</p>';
+if(stage==='route')b.innerHTML='<p class="ok" style="color:#4ade80;font-weight:800">ГРУЗ ИДЕНТИФИЦИРОВАН: ШК '+t.pallet+' (OK) — задержка распознавания 200–300 мс</p><h1>Целевой адрес</h1><p>РЯД '+t.row+' · ПРОЛЕТ '+t.aisle+' · ЯРУС '+t.tier+' (высота около '+t.h+')</p><div>ЦЕЛЕВАЯ ЯЧЕЙКА:</div><div class="cellno">'+t.cell+'</div><span class="badge">ЯРУС '+t.tier+'</span><p>Выберите ячейку, на которую наведены вилы:</p><div class="rack">'+[1,2,3,4,5,6,7].map(n=>{let c='A-'+t.aisle+'-0'+n;return '<div class="cell '+(c===t.cell?'tgt':'')+'" onclick="pickCell(\''+c+'\')">'+c+'</div>'}).join('')+'</div><p>Поднимайте мачту к целевой полке. Жёлтым выделена цель.</p>';
+if(stage==='green'){box.className='term green';b.innerHTML='<h1 style="text-align:center">ЯЧЕЙКА ВЕРНА!</h1><p style="text-align:center;font-size:22px;color:#fff">ЗАВОДИТЕ ВИЛЫ</p><p style="text-align:center">Распознан: '+t.cell+' = Цель: '+t.cell+'. Вилы совмещены, ожидание ввода (Optical Flow).</p><div class="row" style="justify-content:center"><button class="btn green" onclick="finish()">Ввести вилы и опустить груз</button><button class="btn ghost" onclick="stage=\'route\';renderTerm()">Назад к маршруту</button></div>'}
+if(stage==='red'){box.className='term red';b.innerHTML='<h1>ВНИМАНИЕ! НЕСОВПАДЕНИЕ!</h1><p style="color:#fff;font-size:19px">ТЕКУЩАЯ ПОЛКА: <b>'+window.wrongCell+'</b> — ошибка, соседняя ячейка<br>ТРЕБУЕТСЯ: <b>'+t.cell+'</b></p><p style="color:#fff"><b>ПРОВОДКА В 1С:WMS ЗАБЛОКИРОВАНА. НЕ СТАВЬТЕ ГРУЗ!</b></p><div class="row"><button class="btn ghost" onclick="stage=\'route\';renderTerm()">Пересканировать / исправить высоту</button><button class="btn" onclick="openM(\'nfcModal\')">Разблокировка через NFC бригадира</button></div>'}
+if(stage==='done')b.innerHTML='<h1>РАЗМЕЩЕНИЕ ПОДТВЕРЖДЕНО</h1><p>Палета <b style="color:#fff">'+t.pallet+'</b> закреплена за <b style="color:#fff">'+t.cell+'</b>.<br>Optical Flow: вилы выведены, нагрузка снята.<br><span id="txText"></span></p><div class="prog"><i id="progBar"></i></div><div class="row"><button class="btn" onclick="nextTask()">К СЛЕДУЮЩЕМУ ЗАДАНИЮ →</button><button class="btn ghost" onclick="show(\'dash\')">На дашборд</button></div>';}
+function capture(){setTimeout(()=>{stage='route';renderTerm();toast(settings.sound?'Груз подтверждён — зелёный статус':'Груз подтверждён')},300)}
+function pickCell(c){let t=cur();if(c===t.cell){stage='green'}else{window.wrongCell=c;stage='red';addInc('Ошибка ячейки','Цель '+t.cell+', наведено '+c);toast('Ошибка: проводка заблокирована')}renderTerm()}
+function finish(){stage='done';renderTerm();setTimeout(()=>document.getElementById('progBar').style.width='100%',50);document.getElementById('txText').textContent=offline?'Сохранено в локальный буфер SQLite. Отправится в WMS при восстановлении связи.':'Транзакция отправлена в WMS по MQTT/REST.'}
+function nextTask(){let t=cur();t.status='done';doneBase++;if(offline){buf++}if(curIdx<tasks.length-1){curIdx++;tasks[curIdx].status='active';stage='wait';renderTerm();toast('Следующее задание #'+cur().id)}else{stage='wait';show('dash');toast('Очередь завершена')}renderDash();updateHead()}
+function toggleWifi(){offline=!offline;document.getElementById('wifiBtn').textContent=offline?'Вернуться в сеть':'Перейти в офлайн-режим';if(!offline&&buf>0){toast('Связь восстановлена, буфер из '+buf+' отправлен в WMS');buf=0}updateHead();renderTerm();renderDash()}
+function updateHead(){document.getElementById('headWifi').textContent=offline?'Автономно (SQLite)':'Wi-Fi: OK';document.getElementById('headBuf').textContent='Буфер: '+buf}
+function doNfc(){let p=document.getElementById('nfcPin').value.trim();if(!/^\d{4}$/.test(p)){document.getElementById('nfcErr').style.display='block';return}closeM('nfcModal');toast('NFC принято: блокировка снята для корректировки');stage='route';renderTerm()}
+function saveSettings(){settings={sound:document.getElementById('setSound').checked,big:document.getElementById('setBig').checked};localStorage.setItem('nc_settings',JSON.stringify(settings));document.body.classList.toggle('big',settings.big);toast('Настройки сохранены')}
+function resetDemo(){tasks.forEach((t,i)=>t.status=i===0?'active':'queue');curIdx=0;doneBase=86;errs=0;buf=0;inc=[];stage='wait';renderDash();toast('Демо сброшено')}
+document.getElementById('setSound').checked=settings.sound;document.getElementById('setBig').checked=settings.big;document.body.classList.toggle('big',settings.big);renderDash();renderTerm();updateHead();
+</script></body></html>
