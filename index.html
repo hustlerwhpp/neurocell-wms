@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NeuroCell WMS — прототип</title>
+<title>NeuroCell WMS — веб-интерфейс диспетчера и терминал работника</title>
 <style>
 :root{--bg:#0e0f12;--panel:#16181d;--panel2:#1d2027;--line:#262a33;--txt:#f2f4f7;--mut:#9aa3b2;--yel:#f5c518;--grn:#22c55e;--red:#ef4444;--org:#f59e0b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
@@ -38,34 +38,89 @@ table{width:100%;border-collapse:collapse}td,th{padding:11px 8px;border-bottom:1
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#fff;color:#111;padding:13px 18px;border-radius:999px;font-weight:800;display:none;z-index:60}
 .prog{height:12px;background:#2a2e38;border-radius:999px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--grn);transition:width 1.2s}
 @media(max-width:700px){h1{font-size:28px}.cellno{font-size:44px}.badge{font-size:22px}.rack{grid-template-columns:repeat(4,1fr)}}
+
+.web{background:#faf8f5;color:#1c1917;border-radius:18px;padding:20px}
+.web .card{background:#fffefb;border-color:#e7e2da;color:#1c1917}
+.web p{color:#44403c}.web h1,.web h2{color:#1c1917}
+.web input,.web select{background:#fff;border-color:#d6cfc4;color:#1c1917}
+.web .btn{background:#4f46e5;color:#fff}.web .btn:hover{background:#4338ca}
+.web .btn.ghost{background:#f3f0eb;color:#1c1917;border-color:#d6cfc4}
+.web th{color:#78716c}.web td,.web th{border-color:#e7e2da}
+.web .pill{background:#f3f0eb;border-color:#d6cfc4;color:#44403c}
+.web .note{color:#78716c}
+.okk{color:#15803d;font-weight:800}.badd{color:#b91c1c;font-weight:800}
+.video{height:180px;border-radius:14px;background:#1c1917;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px}
 </style></head><body>
 <header><div class="hwrap"><div class="logo">NeuroCell <i>WMS</i><small>Forklift Vision · Zero-Touch Scanning · 1С:WMS</small></div>
 <div><span class="pill" id="headUser">Не выполнен вход</span> <span class="pill" id="headWifi">Wi-Fi: OK</span> <span class="pill" id="headBuf">Буфер: 0</span></div></div></header>
 <div class="wrap">
-<nav id="nav"><button data-v="login" class="on">Вход</button><button data-v="dash">Дашборд</button><button data-v="term">Терминал</button><button data-v="inc">Инциденты</button><button data-v="settings">Настройки</button></nav>
+<nav id="nav"><button data-v="login" class="on">Вход</button><button data-v="disp">Панель диспетчера</button><button data-v="dash">Дашборд терминала</button><button data-v="term">Терминал</button><button data-v="inc">Инциденты</button><button data-v="help">Помощь и исправления</button><button data-v="settings">Настройки</button></nav>
 
-<section class="view on" id="login"><div class="card" style="max-width:560px"><h1>Вход в систему</h1><p>Водитель ричтрака и диспетчер работают в одной системе. Для прототипа подойдёт любой PIN из 4 цифр — он проверяется по длине, а не по базе.</p>
+<section class="view on" id="login"><div class="grid">
+<div class="card"><h1>Терминал работника</h1><p>Бортовой терминал ричтрака. Вход по технике, сотруднику и PIN-коду. Камера на каретке считывает штрихкод палеты и номер ячейки и проверяет, верно ли расположен груз.</p>
 <label>Ричтрак</label><select id="truck"><option>Ричтрак №04</option><option>Ричтрак №07</option><option>Ричтрак №11</option></select>
 <label>Сотрудник</label><input id="user" value="Алексей, водитель ричтрака">
 <label>PIN-код</label><input id="pin" inputmode="numeric" placeholder="4 цифры, например 4829">
 <p class="err" id="loginErr" style="display:none">Введите PIN из 4 цифр.</p>
-<div class="row"><button class="btn" onclick="doLogin()">Войти</button><button class="btn ghost" onclick="loginAs('Диспетчер смены')">Войти как диспетчер</button></div>
-<p class="note">Выход — кнопка в настройках или в шапке дашборда. Состояние заданий при выходе сохраняется для показа.</p></div></section>
+<div class="row"><button class="btn" onclick="doLogin()">Войти в терминал</button></div>
+<p class="note">Выход — кнопка в настройках или в шапке дашборда. Состояние заданий при выходе сохраняется.</p></div>
+<div class="card web"><h1>Веб-панель диспетчера</h1><p>Диспетчер не сканирует грузы: его экран показывает статистику смены и все ошибки с техники — где произошла ошибка, что нужно исправить и кому нужна помощь.</p>
+<label>Электронная почта</label><input id="dmail" type="email" placeholder="dispatcher@neurocell.local">
+<label>Пароль</label><input id="dpass" type="password" placeholder="Пароль">
+<div class="row"><button class="btn" onclick="dispLogin()">Войти</button><button class="btn ghost" onclick="show('reg')">Регистрация</button></div>
+<p class="note">Роли: диспетчер склада, начальник смены, служба безопасности.</p></div>
+</div></section>
 
-<section class="view" id="dash"><h1>Дашборд смены</h1><p id="dashSub"></p>
+<section class="view" id="reg"><div class="card web" style="max-width:560px"><h1>Регистрация</h1>
+<label>Ф.И.О.</label><input id="regName" placeholder="Например, Соколова Анна">
+<label>Электронная почта</label><input id="regMail" type="email" placeholder="name@neurocell.local">
+<label>Роль</label><select id="regRole"><option>Диспетчер склада</option><option>Начальник смены</option><option>Служба безопасности</option></select>
+<label>Пароль</label><input id="regPass" type="password" placeholder="Не короче 8 символов">
+<div class="row"><button class="btn" onclick="dispRegister()">Зарегистрироваться</button><button class="btn ghost" onclick="show('login')">Назад ко входу</button></div></div></section>
+
+<section class="view" id="confirm"><div class="card web" style="max-width:560px"><h1 class="okk">Готово</h1><p id="confirmText">Действие выполнено.</p><div class="row"><button class="btn" onclick="show('disp')">Перейти в панель диспетчера</button></div></div></section>
+
+<section class="view" id="errview"><div class="card web" style="max-width:560px"><h1 class="badd">Ошибка</h1><p id="errText">Не удалось выполнить действие.</p><div class="row"><button class="btn" onclick="show('login')">Вернуться ко входу</button></div></div></section>
+
+<section class="view" id="logout"><div class="card web" style="max-width:560px"><h1>Вы вышли из аккаунта</h1><p>Сеанс диспетчера завершён. Данные смены сохранены и синхронизированы с 1С:WMS.</p><div class="row"><button class="btn" onclick="show('login')">Войти снова</button></div></div></section>
+
+<section class="view" id="dash"><h1>Дашборд смены — терминал</h1><p id="dashSub"></p>
 <div class="grid kpi" style="margin:14px 0">
 <div class="card"><span>В работе</span><b id="kActive">1</b></div><div class="card"><span>Выполнено за смену</span><b id="kDone">86</b></div><div class="card"><span>Ошибки ячеек</span><b id="kErr" style="color:#f87171">0</b></div><div class="card"><span>В буфере (офлайн)</span><b id="kBuf">0</b></div></div>
 <div class="card"><h2>Очередь заданий</h2><div id="taskTable"></div>
 <div class="row"><button class="btn" onclick="openCurrent()">Открыть текущее задание на терминале</button><button class="btn ghost" onclick="resetDemo()">Сбросить демо</button><button class="btn ghost" onclick="show('login')">Выход</button></div></div>
 <div class="card" style="margin-top:12px"><h2>Пустое состояние</h2><p id="emptyText">Когда очередь закончится, здесь будет сообщение «Заданий нет» — оно появляется автоматически после последнего задания.</p></div></section>
 
+
+<section class="view" id="disp"><div class="web"><h1>Дашборд диспетчера</h1><p>Смена: день · Статистика смены и инциденты с техники. Диспетчер сам ничего не сканирует и не перемещает грузы.</p>
+<div class="grid kpi" style="margin:14px 0">
+<div class="card"><span>Заданий за смену</span><b>48</b></div><div class="card"><span>Выполнено</span><b id="dDone">36</b></div><div class="card"><span>Инцидентов</span><b id="dInc" style="color:#b91c1c">3</b></div><div class="card"><span>Синхронизация с 1С:WMS</span><b style="font-size:20px">OK · 14:22</b></div></div>
+<div class="card"><h2>Сменные задания</h2><div id="dispTasks"></div>
+<div class="row"><button class="btn" onclick="show('newtask')">Новое задание на размещение</button><button class="btn ghost" onclick="show('inc')">Журнал инцидентов</button><button class="btn ghost" onclick="show('help')">Помощь и исправления</button><button class="btn ghost" onclick="show('profile')">Личный кабинет</button><button class="btn ghost" onclick="show('logout')">Выход</button></div></div>
+</div></section>
+
+<section class="view" id="newtask"><div class="card web" style="max-width:620px"><h1>Новое задание на размещение</h1><p>Форма функций формирования задания и передачи его на терминал через интеграционный шлюз (лабораторная работа №5).</p>
+<label>Палета (штрихкод)</label><input id="ntPallet" value="4607012345678">
+<label>Место в зоне приёмки</label><select id="ntPlace"><option>P-04</option><option>P-02</option><option>P-07</option></select>
+<label>Целевая ячейка</label><input id="ntCell" value="A-14-05">
+<label>Ричтрак</label><select id="ntTruck"><option>Ричтрак №04</option><option>Ричтрак №07</option><option>Ричтрак №11</option></select>
+<div class="row"><button class="btn" onclick="createTask()">Создать задание</button><button class="btn ghost" onclick="show('disp')">Отмена</button></div></div></section>
+
+<section class="view" id="help"><div class="web"><h1>Помощь и исправления</h1><p>По каждой ошибке: где она произошла, что нужно исправить и кому нужна помощь.</p><div id="helpList"></div>
+<div class="row"><button class="btn ghost" onclick="show('disp')">На дашборд</button><button class="btn ghost" onclick="show('inc')">Журнал инцидентов</button></div></div></section>
+
+<section class="view" id="profile"><div class="card web" style="max-width:620px"><h1>Личный кабинет</h1>
+<label>Ф.И.О.</label><input id="pfName" value="Диспетчер смены">
+<label>Роль</label><select id="pfRole"><option>Диспетчер склада</option><option>Начальник смены</option><option>Служба безопасности</option></select>
+<label>Электронная почта</label><input id="pfMail" type="email" value="dispatcher@neurocell.local">
+<div class="row"><button class="btn" onclick="toast('Профиль сохранён');show('disp')">Сохранить</button><button class="btn ghost" onclick="show('disp')">Назад</button><button class="btn ghost" onclick="show('logout')">Выйти из аккаунта</button></div></div></section>
 <section class="view" id="term"><div class="card" style="padding:0;overflow:hidden"><div id="termBox" class="term">
 <div class="bar"><span><b style="color:#fff" id="tTruck">РИЧТРАК №04</b></span><span id="tWifi">Wi-Fi: OK · БД: Синхр.</span><span>14:22</span></div>
 <div id="termBody"></div></div></div>
 <div class="row"><button class="btn ghost" onclick="toggleWifi()" id="wifiBtn">Перейти в офлайн-режим</button><button class="btn ghost" onclick="show('dash')">На дашборд</button></div>
 <p class="note">Терминал 1280×800, тёмная тема #121212, кнопки не менее 72×72 для работы в перчатках. Зелёный — действие разрешено, красный — стой, проводка заблокирована.</p></section>
 
-<section class="view" id="inc"><div class="card"><h1>Инциденты</h1><p>Ошибки ячеек, повреждённые штрихкоды и офлайн-буфер фиксируются здесь и не теряются при выходе.</p><div id="incList"></div></div></section>
+<section class="view" id="inc"><div class="card web"><h1>Журнал инцидентов</h1><p>Все ошибки с техники за смену: ошибки ячеек, повреждённые штрихкоды, офлайн-буфер. По каждой записи — карточка с видео Dock Gates и указанием, где произошла ошибка, что исправить и кому помочь.</p><div id="incList"></div><div class="row"><button class="btn ghost" onclick="show('disp')">На дашборд диспетчера</button></div></div></section>
 
 <section class="view" id="settings"><div class="card" style="max-width:620px"><h1>Настройки</h1>
 <label><input type="checkbox" id="setSound" checked style="width:auto"> Звуковая индикация: высокий тон — успех, низкий зуммер — ошибка</label><br><br>
@@ -75,6 +130,7 @@ table{width:100%;border-collapse:collapse}td,th{padding:11px 8px;border-bottom:1
 <p class="note">Настройки сохраняются в браузере и применяются сразу, без перезагрузки страницы.</p></div></section>
 </div>
 
+<div class="modal" id="incModal"><div class="box web"><h2 id="imTitle">Карточка инцидента</h2><div class="video">Dock Gates · видео 10 сек<br><span id="imTtn">ТТН —</span></div><p id="imBody"></p><div class="row"><button class="btn" onclick="closeIncident()">Инцидент исправлен</button><button class="btn ghost" onclick="closeM('incModal')">Закрыть</button></div></div></div>
 <div class="modal" id="damageModal"><div class="box"><h2>Повреждён штрихкод</h2><p>Открыт видеовызов старшего диспетчера, переданы текущие снимки палеты. Груз не перемещается до указания диспетчера.</p><div class="row"><button class="btn" onclick="addInc('Повреждён штрихкод','Палета '+cur().pallet);closeM('damageModal')">Вызвать диспетчера</button><button class="btn ghost" onclick="closeM('damageModal')">Закрыть</button></div></div></div>
 <div class="modal" id="nfcModal"><div class="box"><h2>NFC-разблокировка</h2><p>Приложите карту бригадира или введите его PIN. Это единственный путь сброса блокировки ошибочной ячейки — кнопки «Игнорировать» в прямом доступе нет.</p><input id="nfcPin" inputmode="numeric" placeholder="PIN бригадира, 4 цифры"><p class="err" id="nfcErr" style="display:none">Нужен PIN из 4 цифр.</p><div class="row"><button class="btn" onclick="doNfc()">Подтвердить NFC / PIN</button><button class="btn ghost" onclick="closeM('nfcModal')">Отмена</button></div></div></div>
 <div class="toast" id="toast"></div>
@@ -83,21 +139,32 @@ let tasks=[
  {id:4829,pallet:'4607012345678',place:'P-04',row:'08',aisle:'14',tier:'05',cell:'A-14-05',h:'9,2 м',status:'active'},
  {id:4830,pallet:'4607012345685',place:'P-07',row:'08',aisle:'14',tier:'07',cell:'A-14-07',h:'12,1 м',status:'queue'},
  {id:4831,pallet:'4607012345692',place:'P-02',row:'08',aisle:'15',tier:'03',cell:'A-15-03',h:'5,4 м',status:'queue'}];
-let curIdx=0, doneBase=86, errs=0, buf=0, offline=false, inc=[], stage='wait', userName='';
+let curIdx=0, doneBase=36, errs=3, buf=0, offline=false, stage='wait', userName='';
+let inc=[
+ {t:'Ошибка ячейки',d:'Цель A-14-05, наведено A-14-06',where:'Ряд 08, пролёт 14, ярус 05 · ричтрак №04',fix:'Водителю — пересканировать ячейку и поставить палету в A-14-05',help:'Водитель ричтрака №04',ttn:'ТТН №1182 · палета 4607012345678'},
+ {t:'Повреждён штрихкод',d:'Палета в зоне приёмки P-04 не считывается',where:'Зона приёмки, место P-04',fix:'Проверить палету по ТТН, при необходимости переклеить этикетку',help:'Старший смены',ttn:'ТТН №1182 · палета 4607012345678'},
+ {t:'Офлайн-буфер',d:'Ричтрак №07 работал автономно, 2 события в буфере SQLite',where:'Ричтрак №07 · сектор B',fix:'Дождаться синхронизации при восстановлении Wi-Fi, проверить, что события дошли в 1С:WMS',help:'Водитель ричтрака №07',ttn:'—'}];
+let curInc=0;
 let settings=JSON.parse(localStorage.getItem('nc_settings')||'{"sound":true,"big":false}');
 function cur(){return tasks[curIdx]} function toast(t){let e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',3000)}
-function show(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===id));window.scrollTo(0,0);if(id==='dash')renderDash();if(id==='inc')renderInc();if(id==='term')renderTerm()}
+function show(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===id));window.scrollTo(0,0);if(id==='dash')renderDash();if(id==='inc')renderInc();if(id==='term')renderTerm();if(id==='disp')renderDisp();if(id==='help')renderHelp()}
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
 function openM(id){document.getElementById(id).classList.add('open')}function closeM(id){document.getElementById(id).classList.remove('open')}
 function doLogin(){let p=document.getElementById('pin').value.trim();if(!/^\d{4}$/.test(p)){document.getElementById('loginErr').style.display='block';return}userName=document.getElementById('user').value||'Оператор';document.getElementById('headUser').textContent=userName+' · '+document.getElementById('truck').value;toast('Вход выполнен');show('dash')}
-function loginAs(r){userName=r;document.getElementById('headUser').textContent=r;show('dash')}
+function dispLogin(){let m=document.getElementById('dmail').value.trim(),p=document.getElementById('dpass').value;if(!m||!p){document.getElementById('errText').textContent='Ошибка входа: заполните электронную почту и пароль.';show('errview');return}userName='Диспетчер смены';document.getElementById('headUser').textContent=userName;toast('Вход в панель диспетчера');show('disp')}
+function dispRegister(){let n=document.getElementById('regName').value.trim(),m=document.getElementById('regMail').value.trim(),p=document.getElementById('regPass').value;if(!n||!m||p.length<8){document.getElementById('errText').textContent='Ошибка регистрации: заполните Ф.И.О. и почту, пароль — не короче 8 символов.';show('errview');return}document.getElementById('confirmText').textContent='Аккаунт «'+n+'» ('+document.getElementById('regRole').value+') зарегистрирован. Теперь можно войти в веб-панель диспетчера.';show('confirm')}
+function createTask(){let pal=document.getElementById('ntPallet').value.trim(),cell=document.getElementById('ntCell').value.trim();if(!pal||!cell){document.getElementById('errText').textContent='Ошибка: укажите штрихкод палеты и целевую ячейку.';show('errview');return}document.getElementById('confirmText').textContent='Задание на размещение создано: палета '+pal+', место '+document.getElementById('ntPlace').value+', целевая ячейка '+cell+', '+document.getElementById('ntTruck').value+'. Задание передано на терминал через интеграционный шлюз.';show('confirm')}
+function openInc(i){curInc=i;let x=inc[i];document.getElementById('imTitle').textContent='Инцидент: '+x.t;document.getElementById('imTtn').textContent=x.ttn;document.getElementById('imBody').innerHTML='<b>Где:</b> '+x.where+'<br><b>Что произошло:</b> '+x.d+'<br><b>Что исправить:</b> '+x.fix+'<br><b>Кому помочь:</b> '+x.help;openM('incModal')}
+function closeIncident(){inc.splice(curInc,1);errs=Math.max(0,errs-1);closeM('incModal');renderInc();renderDisp();toast('Инцидент закрыт')}
 function renderDash(){document.getElementById('dashSub').textContent='Смена: день · '+ (userName||'Оператор') +' · Статус системы: '+(offline?'автономно, буфер работает':'в сети, синхронизация включена');
 document.getElementById('kActive').textContent=tasks.filter(t=>t.status==='active').length;document.getElementById('kDone').textContent=doneBase;document.getElementById('kErr').textContent=errs;document.getElementById('kBuf').textContent=buf;
 let html='<table><tr><th>Задание</th><th>Палета</th><th>Цель</th><th>Статус</th></tr>'+tasks.map((t,i)=>'<tr><td><b>#'+t.id+'</b></td><td>'+t.pallet+'</td><td>'+t.cell+'</td><td>'+(t.status==='done'?'<span class="tag ok">Выполнено</span>':t.status==='active'?'<span class="tag q">В работе</span>':'<span class="tag q">В очереди</span>')+'</td></tr>').join('')+'</table>';
 if(tasks.every(t=>t.status==='done'))html+='<p><b>Заданий нет.</b> Очередь пуста, новые задания из 1С:WMS появятся автоматически. Для повторного показа нажмите «Сбросить демо».</p>';
 document.getElementById('taskTable').innerHTML=html;document.getElementById('emptyText').textContent=tasks.every(t=>t.status==='done')?'Сейчас очередь пуста — это и есть пустое состояние.':'Когда очередь закончится, здесь будет сообщение «Заданий нет» — оно появляется автоматически после последнего задания.'}
-function renderInc(){document.getElementById('incList').innerHTML=inc.length?inc.map(x=>'<p><b>'+x.t+'</b> — '+x.d+'</p>').join(''):'<p>Инцидентов пока нет. Ошибка ячейки или повреждённый штрихкод появятся здесь автоматически.</p>'}
-function addInc(t,d){inc.unshift({t:t,d:d});errs++;renderDash()}
+function renderInc(){document.getElementById('incList').innerHTML=inc.length?'<table><tr><th>Инцидент</th><th>Где</th><th>Кому помочь</th><th></th></tr>'+inc.map((x,i)=>'<tr><td><b>'+x.t+'</b><br>'+x.d+'</td><td>'+x.where+'</td><td>'+x.help+'</td><td><button class="btn ghost" onclick="openInc('+i+')">Карточка</button></td></tr>').join('')+'</table>':'<p><b>За смену инцидентов нет.</b> Это пустое состояние журнала: новые ошибки с техники появятся здесь автоматически.</p>'}
+function renderDisp(){document.getElementById('dDone').textContent=doneBase;document.getElementById('dInc').textContent=inc.length;document.getElementById('dispTasks').innerHTML='<table><tr><th>Задание</th><th>Палета</th><th>Цель</th><th>Статус</th></tr>'+tasks.map(t=>'<tr><td><b>#'+t.id+'</b></td><td>'+t.pallet+'</td><td>'+t.cell+'</td><td>'+(t.status==='done'?'Выполнено':t.status==='active'?'В работе':'В очереди')+'</td></tr>').join('')+'</table><p class="note">Показаны ближайшие задания очереди; всего за смену — 48.</p>'}
+function renderHelp(){document.getElementById('helpList').innerHTML=inc.length?inc.map(x=>'<div class="card" style="margin-bottom:12px"><h2>'+x.t+'</h2><p><b>ГДЕ:</b> '+x.where+'</p><p><b>ЧТО ИСПРАВИТЬ:</b> '+x.fix+'</p><p><b>КОМУ ПОМОЧЬ:</b> '+x.help+'</p></div>').join(''):'<div class="card"><p><b>За смену инцидентов нет.</b> Помощь никому не требуется.</p></div>'}
+function addInc(t,d){inc.unshift({t:t,d:d,where:'Ричтрак №04 · текущее задание',fix:'Исправить по указанию диспетчера',help:'Водитель ричтрака №04',ttn:'ТТН №1182'});errs++;renderDash()}
 function openCurrent(){if(tasks.every(t=>t.status==='done')){toast('Очередь пуста');show('dash');return}stage='wait';show('term')}
 function renderTerm(){let t=cur(),box=document.getElementById('termBox');box.className='term';document.getElementById('tTruck').textContent=document.getElementById('truck').value.toUpperCase();document.getElementById('tWifi').textContent=offline?'Автономно (SQLite) · Буфер: '+buf:'Wi-Fi: OK · БД: Синхр.';
 let b=document.getElementById('termBody');
@@ -114,6 +181,6 @@ function toggleWifi(){offline=!offline;document.getElementById('wifiBtn').textCo
 function updateHead(){document.getElementById('headWifi').textContent=offline?'Автономно (SQLite)':'Wi-Fi: OK';document.getElementById('headBuf').textContent='Буфер: '+buf}
 function doNfc(){let p=document.getElementById('nfcPin').value.trim();if(!/^\d{4}$/.test(p)){document.getElementById('nfcErr').style.display='block';return}closeM('nfcModal');toast('NFC принято: блокировка снята для корректировки');stage='route';renderTerm()}
 function saveSettings(){settings={sound:document.getElementById('setSound').checked,big:document.getElementById('setBig').checked};localStorage.setItem('nc_settings',JSON.stringify(settings));document.body.classList.toggle('big',settings.big);toast('Настройки сохранены')}
-function resetDemo(){tasks.forEach((t,i)=>t.status=i===0?'active':'queue');curIdx=0;doneBase=86;errs=0;buf=0;inc=[];stage='wait';renderDash();toast('Демо сброшено')}
+function resetDemo(){tasks.forEach((t,i)=>t.status=i===0?'active':'queue');curIdx=0;doneBase=36;errs=3;buf=0;stage='wait';renderDash();toast('Демо сброшено')}
 document.getElementById('setSound').checked=settings.sound;document.getElementById('setBig').checked=settings.big;document.body.classList.toggle('big',settings.big);renderDash();renderTerm();updateHead();
 </script></body></html>
