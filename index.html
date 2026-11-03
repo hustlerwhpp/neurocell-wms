@@ -2,30 +2,30 @@
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NeuroCell WMS — веб-интерфейс диспетчера и терминал работника</title>
 <style>
-:root{--bg:#0e0f12;--panel:#16181d;--panel2:#1d2027;--line:#262a33;--txt:#f2f4f7;--mut:#9aa3b2;--yel:#f5c518;--grn:#22c55e;--red:#ef4444;--org:#f59e0b}
+:root{--bg:#faf8f5;--panel:#fffefb;--panel2:#f3f0eb;--line:#e7e2da;--txt:#1c1917;--mut:#78716c;--ind:#4f46e5;--indh:#4338ca;--yel:#f5c518;--grn:#22c55e;--red:#ef4444;--org:#f59e0b;--dbg:#121212;--dpanel:#16181d;--dpanel2:#1d2027;--dline:#262a33;--dtxt:#f2f4f7}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
 body.big{font-size:18px}
-header{position:sticky;top:0;z-index:20;background:rgba(14,15,18,.95);border-bottom:1px solid var(--line)}
+header{position:sticky;top:0;z-index:20;background:rgba(250,248,245,.95);border-bottom:1px solid var(--line)}
 .hwrap{max-width:1240px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-.logo{font-weight:900;letter-spacing:.02em}.logo i{color:var(--grn);font-style:normal}.logo small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.logo{font-weight:900;letter-spacing:.02em}.logo i{color:var(--ind);font-style:normal}.logo small{display:block;color:var(--mut);font-weight:400;font-size:12px}
 .pill{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 12px;font-size:13px;color:#d7dce4}
 .pill.warn{background:#3a2a07;border-color:var(--yel);color:#fde68a}
 .wrap{max-width:1240px;margin:0 auto;padding:18px 16px 40px}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}nav button{background:var(--panel);color:#e5e9f0;border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
-nav button.on{background:var(--yel);color:#111;border-color:var(--yel)}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}nav button{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600}
+nav button.on{background:var(--ind);color:#fff;border-color:var(--ind)}
 .view{display:none}.view.on{display:block}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 1px 2px rgba(28,25,23,.05)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
 .kpi b{font-size:32px;display:block;margin-top:4px}.kpi span{color:var(--mut);font-size:13px}
-h1{font-size:36px;margin:4px 0 10px;line-height:1.1}h2{font-size:24px;margin:4px 0 10px}p{color:#cbd2dc;line-height:1.55}
+h1{font-size:36px;margin:4px 0 10px;line-height:1.1}h2{font-size:24px;margin:4px 0 10px}p{color:#44403c;line-height:1.55}
 label{color:var(--mut);font-size:13px}
-input,select{width:100%;background:#0f1115;border:1px solid var(--line);color:#fff;border-radius:12px;padding:14px 16px;font-size:17px;margin:6px 0 12px}
-.btn{min-height:64px;border:0;border-radius:13px;padding:14px 20px;font-size:17px;font-weight:800;cursor:pointer;background:var(--yel);color:#111}
-.btn.ghost{background:var(--panel2);color:#fff;border:1px solid var(--line)}.btn.green{background:var(--grn);color:#06281a}.btn.red{background:var(--red);color:#fff}
+input,select{width:100%;background:#fff;border:1px solid #d6cfc4;color:var(--txt);border-radius:12px;padding:14px 16px;font-size:17px;margin:6px 0 12px}
+.btn{min-height:64px;border:0;border-radius:12px;padding:14px 20px;font-size:17px;font-weight:800;cursor:pointer;background:var(--ind);color:#fff}.btn:hover{background:var(--indh)}
+.btn.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}.btn.ghost:hover{background:#e9e4da}.btn.green{background:var(--grn);color:#06281a}.btn.red{background:var(--red);color:#fff}
 .btn:disabled{opacity:.45}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 table{width:100%;border-collapse:collapse}td,th{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-size:13px}
-.tag{display:inline-block;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700}.ok{background:#052e16;color:#4ade80}.bad{background:#3f0d0d;color:#fca5a5}.q{background:#262a33;color:#e5e9f0}
-.term{border:2px solid var(--line);border-radius:18px;padding:20px;background:#101216}
+.tag{display:inline-block;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700}.ok{background:#dcfce7;color:#15803d}.bad{background:#fee2e2;color:#b91c1c}.q{background:var(--panel2);color:#44403c}
+.term{border:2px solid var(--dline);border-radius:16px;padding:20px;background:var(--dbg);color:var(--dtxt)}
 .term.green{border:12px solid var(--grn);background:#052e16}.term.red{border:2px solid var(--red);background:#3f0d0d;animation:pl 1s infinite}
 @keyframes pl{50%{background:#7f1d1d}}
 .bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--mut);font-size:14px}
@@ -35,7 +35,7 @@ table{width:100%;border-collapse:collapse}td,th{padding:11px 8px;border-bottom:1
 .scan i{position:absolute;left:0;right:0;height:3px;background:var(--grn);top:20%;animation:sc 1.6s infinite}@keyframes sc{50%{top:75%}}
 .err{color:#f87171;font-weight:700}.note{color:var(--mut);font-size:13px;margin-top:12px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}.modal.open{display:flex}.box{background:#17191f;border:1px solid var(--line);border-radius:18px;padding:22px;max-width:540px;width:100%}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#fff;color:#111;padding:13px 18px;border-radius:999px;font-weight:800;display:none;z-index:60}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1c1917;color:#fff;padding:13px 18px;border-radius:999px;font-weight:800;display:none;z-index:60;box-shadow:0 10px 15px rgba(28,25,23,.2)}
 .prog{height:12px;background:#2a2e38;border-radius:999px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--grn);transition:width 1.2s}
 @media(max-width:700px){h1{font-size:28px}.cellno{font-size:44px}.badge{font-size:22px}.rack{grid-template-columns:repeat(4,1fr)}}
 
@@ -50,6 +50,18 @@ table{width:100%;border-collapse:collapse}td,th{padding:11px 8px;border-bottom:1
 .web .note{color:#78716c}
 .okk{color:#15803d;font-weight:800}.badd{color:#b91c1c;font-weight:800}
 .video{height:180px;border-radius:14px;background:#1c1917;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px}
+
+/* Terminal-dark zones: dashboard of the terminal, terminal settings, terminal modals */
+#dash .card,#settings .card{background:var(--dpanel);border-color:var(--dline);color:var(--dtxt)}
+#dash p,#settings p{color:#cbd2dc}
+#dash td,#dash th,#settings td,#settings th{border-color:var(--dline)}
+#dash .btn.ghost,#settings .btn.ghost{background:var(--dpanel2);color:#fff;border-color:var(--dline)}
+#dash .tag.q{background:#262a33;color:#e5e9f0}
+.term p{color:#cbd2dc}.term .cell{background:var(--dpanel2);border-color:var(--dline);color:var(--dtxt)}
+.term .prog{background:#2a2e38}.term .btn{background:var(--yel);color:#111}.term .btn:hover{background:#eab308}
+.term .btn.ghost{background:var(--dpanel2);color:#fff;border-color:var(--dline)}
+.term .btn.green{background:var(--grn);color:#06281a}
+.box.web{background:#fffefb;color:var(--txt)}.box.web p{color:#44403c}
 </style></head><body>
 <header><div class="hwrap"><div class="logo">NeuroCell <i>WMS</i><small>Forklift Vision · Zero-Touch Scanning · 1С:WMS</small></div>
 <div><span class="pill" id="headUser">Не выполнен вход</span> <span class="pill" id="headWifi">Wi-Fi: OK</span> <span class="pill" id="headBuf">Буфер: 0</span></div></div></header>
