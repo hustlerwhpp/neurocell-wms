@@ -1,5 +1,20 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- WHPP-POLISH -->
+<meta name="description" content="NeuroCell WMS — веб-панель диспетчера и терминал работника ричтрака: задания смены, журнал инцидентов, контроль размещения паллет в ячейках стеллажей, синхронизация с 1С:WMS.">
+<meta name="theme-color" content="#faf8f5">
+<link rel="canonical" href="https://wms.whpp.site/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:site_name" content="NeuroCell WMS">
+<meta property="og:title" content="NeuroCell WMS — веб-интерфейс диспетчера и терминал работника">
+<meta property="og:description" content="NeuroCell WMS — веб-панель диспетчера и терминал работника ричтрака: задания смены, журнал инцидентов, контроль размещения паллет в ячейках стеллажей, синхронизация с 1С:WMS.">
+<meta property="og:url" content="https://wms.whpp.site/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="NeuroCell WMS — веб-интерфейс диспетчера и терминал работника">
+<meta name="twitter:description" content="NeuroCell WMS — веб-панель диспетчера и терминал работника ричтрака: задания смены, журнал инцидентов, контроль размещения паллет в ячейках стеллажей, синхронизация с 1С:WMS.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%23ffffff' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+
 <title>NeuroCell WMS — веб-интерфейс диспетчера и терминал работника</title>
 <style>
 :root{--bg:#faf8f5;--panel:#fffefb;--panel2:#f3f0eb;--line:#e7e2da;--txt:#1c1917;--mut:#78716c;--ind:#4f46e5;--indh:#4338ca;--yel:#f5c518;--grn:#22c55e;--red:#ef4444;--org:#f59e0b;--dbg:#121212;--dpanel:#16181d;--dpanel2:#1d2027;--dline:#262a33;--dtxt:#f2f4f7}
@@ -62,7 +77,26 @@ table{width:100%;border-collapse:collapse}td,th{padding:11px 8px;border-bottom:1
 .term .btn.ghost{background:var(--dpanel2);color:#fff;border-color:var(--dline)}
 .term .btn.green{background:var(--grn);color:#06281a}
 .box.web{background:#fffefb;color:var(--txt)}.box.web p{color:#44403c}
+
+/* WHPP-POLISH */
+:focus-visible{outline:2px solid #4f46e5;outline-offset:2px;border-radius:4px}
+::selection{background:#4f46e5;color:#fff}
+html{-webkit-tap-highlight-color:transparent;scrollbar-width:thin;scrollbar-color:#d6cfc4 #faf8f5}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#faf8f5}
+::-webkit-scrollbar-thumb{background:#d6cfc4;border-radius:8px;border:2px solid #faf8f5}
+::-webkit-scrollbar-thumb:hover{background:#78716c}
+html,body{overflow-x:clip}
+img{max-width:100%}
+a,button,input,select,textarea{touch-action:manipulation}
+a,button{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .15s ease}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+.btn:active,nav button:active{transform:scale(.98)}
+@media (pointer:coarse){nav button{min-height:44px}}
 </style></head><body>
+<noscript><div style="background:#fffefb;border:1px solid #e7e2da;border-radius:12px;padding:16px;margin:16px;font-family:Inter,system-ui,sans-serif;color:#1c1917">Для работы NeuroCell WMS включите JavaScript: интерфейс диспетчера и терминал работника работают как веб-приложение.</div></noscript>
+
 <header><div class="hwrap"><div class="logo">NeuroCell <i>WMS</i><small>Forklift Vision · Zero-Touch Scanning · 1С:WMS</small></div>
 <div><span class="pill" id="headUser">Не выполнен вход</span> <span class="pill" id="headWifi">Wi-Fi: OK</span> <span class="pill" id="headBuf">Буфер: 0</span></div></div></header>
 <div class="wrap">
