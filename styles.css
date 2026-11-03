@@ -1,12 +1,12 @@
 /* styles.css */
 :root {
-    --bg-canvas: #f8fafc;
-    --bg-panel: #ffffff;
-    --border-subtle: #e2e8f0;
+    --bg-canvas: #faf8f5;
+    --bg-panel: #fffefb;
+    --border-subtle: #e7e2da;
     --border-focus: #4f46e5;
     
-    --text-main: #0f172a;
-    --text-muted: #64748b;
+    --text-main: #1c1917;
+    --text-muted: #78716c;
     
     /* Статусные цвета */
     --status-ok: #059669;
@@ -91,7 +91,7 @@ header {
     font-size: 11px; 
     font-family: var(--font-data); 
     color: var(--text-muted); 
-    background: #f8fafc; 
+    background: #faf8f5; 
     padding: 3px 6px; 
     border-radius: 4px; 
     border: 1px solid var(--border-subtle); 
@@ -255,7 +255,7 @@ main {
 
 .cam-tag { 
     background: rgba(255, 255, 255, 0.94); 
-    color: #0f172a; 
+    color: #1c1917; 
     padding: 3px 8px; 
     font-family: var(--font-data); 
     font-size: 10px; 
@@ -352,7 +352,7 @@ aside {
 .ai-header { 
     padding: 14px 16px; 
     border-bottom: 1px solid var(--border-subtle); 
-    background: #f8fafc; 
+    background: #faf8f5; 
     flex-shrink: 0; /* Шапка чата никогда не сжимается */
 }
 
@@ -389,17 +389,17 @@ aside {
     background: transparent;
 }
 .chat-messages::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #d6cfc4;
     border-radius: 4px;
 }
 .chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #a8a29e;
 }
 
 .chat-controls { 
     padding: 12px 16px; 
     border-top: 1px solid var(--border-subtle); 
-    background: #ffffff; 
+    background: #fffefb; 
     flex-shrink: 0; /* Панель ввода всегда прижата к низу и не сжимается */
 }
 
@@ -413,7 +413,7 @@ aside {
 }
 
 .msg-sys { 
-    background: #f8fafc; 
+    background: #faf8f5; 
     border: 1px solid var(--border-subtle); 
     border-left: 3px solid var(--status-brand); 
     align-self: flex-start; 
@@ -429,7 +429,7 @@ aside {
 .chat-controls { 
     padding: 12px 16px; 
     border-top: 1px solid var(--border-subtle); 
-    background: #ffffff; 
+    background: #fffefb; 
 }
 
 .chips-row { 
@@ -442,10 +442,10 @@ aside {
 }
 
 .chips-row::-webkit-scrollbar { height: 4px; }
-.chips-row::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.chips-row::-webkit-scrollbar-thumb { background: #d6cfc4; border-radius: 4px; }
 
 .chip-btn {
-    background: #f1f5f9;
+    background: #f3f0eb;
     border: 1px solid var(--border-subtle);
     color: var(--text-main);
     padding: 5px 10px;
@@ -457,7 +457,7 @@ aside {
     transition: background-color 0.15s, border-color 0.15s;
     flex-shrink: 0;
 }
-.chip-btn:hover { background: #e2e8f0; border-color: #cbd5e1; }
+.chip-btn:hover { background: #e7e2da; border-color: #d6cfc4; }
 
 .chat-input-group { 
     display: flex; 
@@ -519,7 +519,7 @@ th {
     font-size: 11px; 
     text-transform: uppercase; 
     color: var(--text-muted); 
-    background: #f8fafc; 
+    background: #faf8f5; 
     font-weight: 600; 
     letter-spacing: 0.5px;
 }
@@ -593,15 +593,15 @@ td {
    Design System: Modern Light Slate & Indigo — additions
    ========================================================================== */
 header {
-    background-color: rgb(255 255 255 / 0.95);
+    background-color: rgb(255 254 251 / 0.95);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
 ::selection { background: rgb(99 102 241 / 0.25); }
 *::-webkit-scrollbar { width: 6px; height: 6px; }
-*::-webkit-scrollbar-track { background: #f8fafc; }
-*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-*::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-* { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f8fafc; }
+*::-webkit-scrollbar-track { background: #faf8f5; }
+*::-webkit-scrollbar-thumb { background: #d6cfc4; border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+* { scrollbar-width: thin; scrollbar-color: #d6cfc4 #faf8f5; }
 :focus-visible { outline: 2px solid rgb(99 102 241 / 0.5); outline-offset: 1px; }
 button.btn-send { border-radius: 8px; }
