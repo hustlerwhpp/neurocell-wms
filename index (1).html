@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NeuroCell WMS — Диспетчер и Терминал ричтрака</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233b82f6'/%3E%3Ctext x='32' y='43' font-family='Inter,sans-serif' font-size='28' font-weight='800' fill='%23ffffff' text-anchor='middle'%3ENC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090b10;
+      --card-dark: #12161f;
+      --card-border: #1e2638;
+      --text-main: #f1f5f9;
+      --text-muted: #8b9bb4;
+      --accent-blue: #3b82f6;
+      --accent-blue-hover: #2563eb;
+      --status-ok: #10b981;
+      --status-ok-bg: rgba(16, 185, 129, 0.12);
+      --status-err: #ef4444;
+      --status-err-bg: rgba(239, 68, 68, 0.15);
+      --status-warn: #f59e0b;
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Верхняя панель системы */
+    header {
+      background: rgba(18, 22, 31, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-tag {
+      background: var(--accent-blue);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    .node-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      background: #0d1117;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    /* Навигация режимов: Диспетчер / Водитель */
+    nav.app-nav {
+      display: flex;
+      gap: 4px;
+      background: #0d1117;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      overflow-x: auto;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+    nav.app-nav button {
+      background: transparent;
+      border: 0;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font-ui);
+      white-space: nowrap;
+    }
+    nav.app-nav button.active {
+      background: var(--accent-blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .header-user strong { color: var(--text-main); }
+    .btn-logout {
+      background: #1e2638;
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: background 0.15s;
+    }
+    .btn-logout:hover { background: #2d3748; color: #fff; }
+
+    /* Контейнер видов */
+    .viewport {
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .view-section { display: none; }
+    .view-section.active { display: block; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Общие стили карточек и кнопок */
+    .card {
+      background: var(--card-dark);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+    h1 { font-size: clamp(20px, 2.4vw, 28px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+    h2 { font-size: clamp(16px, 1.8vw, 20px); font-weight: 700; margin-bottom: 12px; }
+    p.sub { font-size: clamp(13px, 1.2vw, 14px); color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--accent-blue);
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      touch-action: manipulation;
+    }
+    .btn:hover { background: var(--accent-blue-hover); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+    .btn.ghost {
+      background: #1e2638;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    .btn.ghost:hover { background: #2b354c; }
+    .btn.danger { background: var(--status-err); }
+    .btn.danger:hover { background: #dc2626; }
+    .btn.success { background: var(--status-ok); color: #fff; }
+    .btn.success:hover { background: #059669; }
+    .btn.warn { background: var(--status-warn); color: #000; }
+    .btn.warn:hover { background: #d97706; }
+
+    /* Поля ввода */
+    label { display: block; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%;
+      background: #0b0e14;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 15px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    /* KPI блоки */
+    .kpi-tile {
+      background: #0f131c;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 4px solid var(--accent-blue);
+    }
+    .kpi-tile.ok { border-left-color: var(--status-ok); }
+    .kpi-tile.err { border-left-color: var(--status-err); }
+    .kpi-tile.warn { border-left-color: var(--status-warn); }
+    .kpi-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .kpi-val { font-size: clamp(22px, 2.2vw, 28px); font-weight: 800; font-family: var(--font-mono); margin-top: 4px; }
+    .kpi-desc { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Таблицы */
+    .table-box {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow-x: auto;
+      margin-top: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+    table { width: 100%; min-width: 620px; border-collapse: collapse; text-align: left; }
+    th {
+      background: #0b0e14;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+    tr:last-child td { border-bottom: 0; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+    .tag.ok { background: var(--status-ok-bg); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .tag.err { background: var(--status-err-bg); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+    .tag.queue { background: #1e2638; color: #94a3b8; border: 1px solid #334155; }
+
+    /* ========================================================
+       ЭКРАНЫ ВОДИТЕЛЕЙ (БОРТОВОЙ ТЕРМИНАЛ РИЧТРАКА HMI)
+       ======================================================== */
+    .driver-subnav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .driver-subnav button {
+      background: #181d27;
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .driver-subnav button.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+
+    .terminal-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #121212;
+      border: 3px solid #232730;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    }
+    .term-header {
+      background: #181b22;
+      border-bottom: 2px solid #282d38;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .term-steps {
+      display: flex;
+      gap: 8px;
+      padding: 14px 18px 0;
+      overflow-x: auto;
+    }
+    .term-step-pill {
+      flex: 1;
+      min-width: 110px;
+      padding: 10px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      background: #1a1e27;
+      color: #64748b;
+      border: 1px solid #283144;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .term-step-pill.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #3b82f6;
+      box-shadow: 0 0 16px rgba(37, 99, 235, 0.4);
+    }
+    .term-step-pill.done {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .term-screen {
+      padding: 24px 20px;
+      min-height: 440px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    /* Состояние W3: Зеленый заливающий статус */
+    .term-screen.state-green {
+      background: #042416;
+      border: 6px solid #10b981;
+      box-shadow: inset 0 0 50px rgba(16, 185, 129, 0.25);
+    }
+
+    /* Состояние W4: Красный пульсирующий статус */
+    .term-screen.state-red {
+      background: #340c0c;
+      border: 6px solid #ef4444;
+      animation: alertPulse 1.2s infinite alternate;
+    }
+    @keyframes alertPulse {
+      0% { box-shadow: inset 0 0 30px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.4); }
+      100% { box-shadow: inset 0 0 80px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.7); }
+    }
+
+    .term-cell-giant {
+      font-size: clamp(48px, 6vw, 76px);
+      font-weight: 900;
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+      line-height: 1.05;
+      margin: 10px 0;
+      color: #fbbf24;
+    }
+    .badge-tier {
+      display: inline-block;
+      background: #fbbf24;
+      color: #000;
+      font-size: clamp(18px, 2.5vw, 24px);
+      font-weight: 900;
+      padding: 6px 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Промышленные кнопки для работы в перчатках (>= 72px) */
+    .term-btn-industrial {
+      min-height: 72px;
+      padding: 16px 24px;
+      font-size: clamp(15px, 1.8vw, 18px);
+      font-weight: 800;
+      border-radius: 14px;
+      border: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      touch-action: manipulation;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .term-btn-industrial:active { transform: scale(0.97); }
+
+    /* Симулятор рейки стеллажа */
+    .rack-simulator {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .rack-cell-btn {
+      background: #1b212d;
+      border: 2px solid #2d3748;
+      border-radius: 8px;
+      padding: 14px 4px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: clamp(12px, 1.3vw, 15px);
+      font-weight: 800;
+      color: #e2e8f0;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .rack-cell-btn:hover { border-color: #3b82f6; background: #242c3c; }
+    .rack-cell-btn.target { border-color: #fbbf24; background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+
+    /* Модальные окна */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 200;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: #161b26;
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      max-width: 580px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .video-mock {
+      background: #090c12;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .video-pulse-record {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid var(--status-err);
+      color: #f87171;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+    }
+    .video-pulse-record span {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--status-err);
+      display: inline-block; animation: blink 1s infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.3; } }
+
+    /* Toast */
+    .toast-msg {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #334155;
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      max-width: 90vw;
+      text-align: center;
+    }
+
+    /* ========================================================
+       АДАПТИВНОСТЬ ПОД МОБИЛЬНЫЕ И ПЛАНШЕТЫ (MEDIA QUERIES)
+       ======================================================== */
+    @media (max-width: 1080px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .viewport { padding: 14px 12px; }
+      .header-inner { padding: 8px 12px; }
+      .brand { font-size: 16px; }
+      .node-pill { display: none; }
+      nav.app-nav { width: 100%; order: 3; margin-top: 4px; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; gap: 12px; }
+      .card { padding: 16px; border-radius: 12px; }
+      .rack-simulator { grid-template-columns: repeat(4, 1fr); }
+      .term-screen { padding: 16px 12px; min-height: 400px; }
+      .term-steps { padding: 10px 12px 0; }
+      .term-header { padding: 10px 14px; }
+      .term-btn-industrial { min-height: 64px; font-size: 16px; padding: 14px 18px; }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 22px; }
+      .term-cell-giant { font-size: 42px; }
+      .badge-tier { font-size: 17px; padding: 4px 12px; }
+      .rack-simulator { grid-template-columns: repeat(2, 1fr); }
+      .term-step-pill { font-size: 11px; padding: 8px 4px; min-width: 90px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ШАПКА СИСТЕМЫ -->
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-tag">NC-WMS</span>
+        <span>NeuroCell WMS</span>
+        <span class="node-pill">NODE-NSK-01 [НОВОСИБИРСК]</span>
+      </div>
+
+      <nav class="app-nav">
+        <button id="nav-btn-disp" class="active" onclick="switchMainTab('disp')">Панель диспетчера</button>
+        <button id="nav-btn-tasks" onclick="switchMainTab('tasks')">Сменные задания</button>
+        <button id="nav-btn-inc" onclick="switchMainTab('inc')">Журнал инцидентов</button>
+        <button id="nav-btn-help" onclick="switchMainTab('help')">Помощь и исправления</button>
+        <button id="nav-btn-driver" onclick="switchMainTab('driver')">Терминал водителя (HMI)</button>
+      </nav>
+
+      <div class="header-user">
+        <span id="user-display">Диспетчер • Смена 1</span>
+        <button class="btn-logout" onclick="openModal('modal-logout')">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- КОНТЕНТНЫЙ ВЬЮПОРТ -->
+  <main class="viewport">
+
+    <!-- ========================================================
+         РАЗДЕЛ 1: ПАНЕЛЬ ДИСПЕТЧЕРА (ЭКРАНЫ 03-13)
+         ======================================================== -->
+    <section id="view-disp" class="view-section active">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h1>Главная — дашборд диспетчера</h1>
+          <p class="sub">Мониторинг инцидентов, синхронизация с 1С:WMS и контроль перемещения грузов</p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" onclick="switchMainTab('newtask')">+ Новое задание</button>
+          <button class="btn ghost" onclick="openProfile()">Профиль</button>
+        </div>
+      </div>
+
+      <!-- KPI плитки -->
+      <div class="grid-4" style="margin-bottom: 20px;">
+        <div class="kpi-tile">
+          <div class="kpi-label">Заданий за смену</div>
+          <div class="kpi-val" id="kpi-total-tasks">48</div>
+          <div class="kpi-desc">Заданий на размещение из 1С:WMS</div>
+        </div>
+        <div class="kpi-tile ok">
+          <div class="kpi-label">Выполнено</div>
+          <div class="kpi-val" id="kpi-done-tasks">36</div>
+          <div class="kpi-desc">36 подтверждено без ручного ТСД</div>
+        </div>
+        <div class="kpi-tile err">
+          <div class="kpi-label">Инциденты с техники</div>
+          <div class="kpi-val" id="kpi-incidents-count">3</div>
+          <div class="kpi-desc">Блокировок пересорта в 1C:WMS</div>
+        </div>
+        <div class="kpi-tile warn">
+          <div class="kpi-label">Синхронизация</div>
+          <div class="kpi-val" style="font-size:clamp(17px, 1.8vw, 20px); line-height:36px;">1C: OK • 120 мс</div>
+          <div class="kpi-desc">Wi-Fi: OK • SQLite-буфер: <span id="disp-buf-count">0</span></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2>Последние сменные задания</h2>
+            <button class="btn ghost" style="padding:4px 10px; font-size:11.5px;" onclick="switchMainTab('tasks')">Все задания →</button>
+          </div>
+          <div class="table-box">
+            <table>
+              <thead>
+                <tr>
+                  <th>Задание</th>
+                  <th>Палета</th>
+                  <th>Маршрут</th>
+                  <th>Статус</th>
+                </tr>
+              </thead>
+              <tbody id="disp-recent-tasks"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2>Инциденты смены (Требуют внимания)</h2>
+            <button class="btn ghost" style="padding:4px 10px; font-size:11.5px;" onclick="switchMainTab('inc')">Журнал →</button>
+          </div>
+          <div id="disp-incident-cards"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- СМЕННЫЕ ЗАДАНИЯ -->
+    <section id="view-tasks" class="view-section">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h1>Сменные задания</h1>
+          <p class="sub">Задания на размещение палет из 1С:WMS • Контроль Zero-Touch Scanning</p>
+        </div>
+        <button class="btn" onclick="switchMainTab('newtask')">+ Создать задание</button>
+      </div>
+
+      <div class="card">
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Штрихкод палеты</th>
+                <th>Приёмка</th>
+                <th>Целевая ячейка</th>
+                <th>Техника</th>
+                <th>Высота</th>
+                <th>Статус в WMS</th>
+              </tr>
+            </thead>
+            <tbody id="full-tasks-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЖУРНАЛ ИНЦИДЕНТОВ -->
+    <section id="view-inc" class="view-section">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h1>Журнал инцидентов и видеоархив</h1>
+          <p class="sub">Расследование топологического пересорта и повреждений груза по записям Dock Gates</p>
+        </div>
+        <button class="btn ghost" onclick="switchMainTab('help')">Помощь и исправления →</button>
+      </div>
+      <div class="card" id="incidents-container"></div>
+    </section>
+
+    <!-- ПОМОЩЬ И ИСПРАВЛЕНИЯ -->
+    <section id="view-help" class="view-section">
+      <div style="margin-bottom:18px;">
+        <h1>Помощь и исправления</h1>
+        <p class="sub">Оперативная маршрутизация помощи линейному персоналу на стеллажных рядах</p>
+      </div>
+      <div id="help-cards-list" class="grid-2"></div>
+    </section>
+
+    <!-- ФОРМА НОВОГО ЗАДАНИЯ -->
+    <section id="view-newtask" class="view-section">
+      <div class="card" style="max-width: 680px; margin: 0 auto;">
+        <h1>Новое задание на размещение</h1>
+        <p class="sub">Формирование складского задания и трансляция в очередь MQTT/REST техники</p>
+        
+        <form onsubmit="handleCreateTask(event)">
+          <div class="grid-2">
+            <div>
+              <label>Штрихкод палеты (1D/2D)</label>
+              <input type="text" id="form-barcode" value="4607012345708" required>
+            </div>
+            <div>
+              <label>Место в зоне приёмки</label>
+              <select id="form-place">
+                <option value="P-04">Зона приёмки P-04</option>
+                <option value="P-02">Зона приёмки P-02</option>
+                <option value="P-07">Зона приёмки P-07</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label>Целевая ячейка стеллажа</label>
+              <input type="text" id="form-cell" value="A-14-05" required>
+            </div>
+            <div>
+              <label>Назначенный ричтрак</label>
+              <select id="form-truck">
+                <option value="Ричтрак №04">Ричтрак №04 (Алексей)</option>
+                <option value="Ричтрак №07">Ричтрак №07 (Сергей)</option>
+                <option value="Ричтрак №11">Ричтрак №11 (Дмитрий)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background:#0b0e14; border:1px solid var(--card-border); border-radius:10px; padding:12px; margin-bottom:16px;">
+            <div style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono); line-height:1.5;">
+              ПАРАМЕТРЫ МАРШРУТА: Ряд 08 • Пролёт 14 • Ярус 05 (h ~ 9.2 м)<br>
+              ИНТЕГРАЦИЯ: 1C:WMS Шлюз • Очередь MQTT: neurocell/tasks/truck_04
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="submit" class="btn">Отправить задание на технику</button>
+            <button type="button" class="btn ghost" onclick="switchMainTab('disp')">Отмена</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         РАЗДЕЛ 2: РАСШИРЕННЫЙ КОМПЛЕКС ЭКРАНОВ ДЛЯ ВОДИТЕЛЕЙ
+         ======================================================== -->
+    <section id="view-driver" class="view-section">
+      
+      <!-- Внутренняя навигация экранов водителя -->
+      <div class="driver-subnav">
+        <button id="dtab-login" onclick="switchDriverScreen('login')">1. Вход по PIN</button>
+        <button id="dtab-dash" onclick="switchDriverScreen('dash')">2. Дашборд смены водителя</button>
+        <button id="dtab-hmi" class="active" onclick="switchDriverScreen('hmi')">3. Бортовой HMI (W1–W5)</button>
+        <button id="dtab-pause" onclick="switchDriverScreen('pause')">4. Пауза / Диагностика ричтрака</button>
+      </div>
+
+      <!-- ЭКРАН 1: ВХОД ВОДИТЕЛЯ В СИСТЕМУ (АВТОРИЗАЦИЯ) -->
+      <div id="driver-screen-login" style="display:none;">
+        <div class="card" style="max-width:540px; margin: 20px auto; text-align:center;">
+          <div style="font-size:46px; margin-bottom:8px;">🚜</div>
+          <h1>Бортовой терминал ричтрака</h1>
+          <p class="sub">Вход водителя в смену • Автоматическая привязка к WMS</p>
+
+          <div style="text-align:left; margin:20px 0;">
+            <label>Выберите единицу техники</label>
+            <select id="login-truck-select" style="font-size:16px; font-weight:700;">
+              <option value="Ричтрак №04">Ричтрак №04 (Мачта 12.5м, Edge Jetson Orin)</option>
+              <option value="Ричтрак №07">Ричтрак №07 (Мачта 10.5м, Edge Jetson Nano)</option>
+              <option value="Ричтрак №11">Ричтрак №11 (Мачта 14.0м, Edge Jetson Orin)</option>
+            </select>
+
+            <label>Ф.И.О. водителя / оператора</label>
+            <input type="text" id="login-driver-name" value="Алексей Воронов (Таб. №1482)">
+
+            <label>Персональный PIN-код (4 цифры)</label>
+            <input type="password" id="login-driver-pin" placeholder="••••" maxlength="4" style="font-size:24px; text-align:center; letter-spacing:10px; font-family:var(--font-mono);">
+            <div id="login-pin-err" style="color:#f87171; font-size:12px; display:none; margin-bottom:10px;">Введите 4 цифры PIN-кода</div>
+          </div>
+
+          <button class="btn success" style="width:100%; min-height:56px; font-size:16px;" onclick="performDriverLogin()">
+            Войти в бортовой терминал →
+          </button>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:14px;">
+            Безопасность: доступ блокируется при 3 неверных попытках ввода
+          </div>
+        </div>
+      </div>
+
+      <!-- ЭКРАН 2: ДАШБОРД СМЕНЫ ВОДИТЕЛЯ -->
+      <div id="driver-screen-dash" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h1>Смена водителя: <span id="dash-driver-label" style="color:#38bdf8;">Алексей</span></h1>
+            <p class="sub" style="margin-bottom:0;" id="dash-truck-label">Техника: Ричтрак №04 • Сектор: Зона приёмки и Стеллажи A-08</p>
+          </div>
+          <button class="btn" onclick="startCurrentTaskFromDash()">К выполнению задания →</button>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:20px;">
+          <div class="kpi-tile ok">
+            <div class="kpi-label">Размещено за смену</div>
+            <div class="kpi-val" id="driver-stat-done">14</div>
+            <div class="kpi-desc">Среднее время цикла: 2 мин 10 сек</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">Заданий в очереди</div>
+            <div class="kpi-val" id="driver-stat-queue">3</div>
+            <div class="kpi-desc">Синхронизировано из 1С:WMS</div>
+          </div>
+          <div class="kpi-tile warn">
+            <div class="kpi-label">Топологический пересорт</div>
+            <div class="kpi-val" style="color:#10b981;">0</div>
+            <div class="kpi-desc">Все ошибки заблокированы Edge AI</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Очередь заданий на ваш ричтрак</h2>
+          <div class="table-box">
+            <table>
+              <thead>
+                <tr>
+                  <th>№ Задания</th>
+                  <th>Штрихкод груза</th>
+                  <th>Откуда</th>
+                  <th>Куда (Ячейка)</th>
+                  <th>Высота подъёма</th>
+                  <th>Действие</th>
+                </tr>
+              </thead>
+              <tbody id="driver-tasks-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ЭКРАН 3: БОРТОВОЙ ТЕРМИНАЛ HMI (W1-W5) -->
+      <div id="driver-screen-hmi">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <span class="tag ok">HMI ТЕРМИНАЛ РИЧТРАКА</span>
+            <span style="font-size:12.5px; color:var(--text-muted); margin-left:8px;">Zero-Touch Scanning • Светофорный интерфейс</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn ghost" style="padding:6px 12px; font-size:12px;" onclick="toggleTerminalWifi()" id="term-wifi-btn">📶 Wi-Fi: В сети</button>
+            <button class="btn ghost" style="padding:6px 12px; font-size:12px;" onclick="switchDriverScreen('pause')">⏸ Пауза смены</button>
+            <button class="btn ghost" style="padding:6px 12px; font-size:12px;" onclick="resetTerminalDemo()">🔄 Сброс демо</button>
+          </div>
+        </div>
+
+        <div class="terminal-wrapper">
+          <!-- Шапка бортового HMI -->
+          <div class="term-header">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <span style="color:#38bdf8; font-size:15px;">ТЕРМИНАЛ РАБОТНИКА</span>
+              <span style="color:#64748b;">|</span>
+              <span style="color:#fff;" id="term-truck-name">РИЧТРАК №04</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+              <span id="term-wifi-status" style="color:#34d399;">● Wi-Fi: OK</span>
+              <span style="color:#94a3b8;" id="term-buffer-pill">Буфер: 0 паллет</span>
+              <span style="color:#fff;" id="term-clock">14:22:00</span>
+            </div>
+          </div>
+
+          <!-- 4 шага процесса -->
+          <div class="term-steps">
+            <div class="term-step-pill active" id="pill-step-1">01 Захват груза</div>
+            <div class="term-step-pill" id="pill-step-2">02 Маршрут</div>
+            <div class="term-step-pill" id="pill-step-3">03 Проверка ячейки</div>
+            <div class="term-step-pill" id="pill-step-4">04 Размещение</div>
+          </div>
+
+          <!-- Динамическое тело HMI -->
+          <div class="term-screen" id="term-screen-body"></div>
+
+          <!-- Нижняя статусная строка -->
+          <div style="background:#0d1017; border-top:1px solid #1f2533; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:#64748b; flex-wrap:wrap; gap:6px;">
+            <span>Автоматическая проверка Edge AI (NVIDIA Jetson) • Без ручного ввода</span>
+            <span>Разблокировка аварий: только по NFC / PIN бригадира</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ЭКРАН 4: ПАУЗА СМЕНЫ И ДИАГНОСТИКА ОБОРУДОВАНИЯ РИЧТРАКА -->
+      <div id="driver-screen-pause" style="display:none;">
+        <div class="card" style="max-width:760px; margin: 10px auto;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+            <div>
+              <h1>Пауза смены и предрейсовый осмотр</h1>
+              <p class="sub" style="margin-bottom:0;">Статус бортового оборудования комплекса «Forklift Vision»</p>
+            </div>
+            <span class="tag ok" style="font-size:12px;">СМЕНА НА ПАУЗЕ</span>
+          </div>
+
+          <div class="grid-2" style="margin-bottom:20px;">
+            <div style="background:#0b0e14; border:1px solid var(--card-border); border-radius:12px; padding:16px;">
+              <h3 style="font-size:14px; margin-bottom:12px; color:#38bdf8;">Диагностика сенсоров и вычислителя</h3>
+              <div style="font-size:13px; line-height:1.8;">
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">Камера каретки (Global Shutter):</span>
+                  <span style="color:#10b981; font-weight:700;">OK (30 FPS)</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">ИК-подсветка 850 нм:</span>
+                  <span style="color:#10b981; font-weight:700;">Активна</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">Вычислитель Jetson Orin:</span>
+                  <span style="color:#10b981; font-weight:700;">Temp 48°C / Latency 140 мс</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">Шлейф мачты (Igus Chainflex):</span>
+                  <span style="color:#10b981; font-weight:700;">Ресурс 98% (Норма)</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:#0b0e14; border:1px solid var(--card-border); border-radius:12px; padding:16px;">
+              <h3 style="font-size:14px; margin-bottom:12px; color:#fbbf24;">Параметры тяговой техники</h3>
+              <div style="font-size:13px; line-height:1.8;">
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">Заряд тяговой АКБ:</span>
+                  <span style="color:#10b981; font-weight:800;">84% (Осталось 6.5 ч)</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">Гидравлика мачты:</span>
+                  <span style="color:#10b981; font-weight:700;">Давление 180 бар (Норма)</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">Шлюз 1C:WMS:</span>
+                  <span style="color:#10b981; font-weight:700;">Синхронизирован</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--text-muted);">Офлайн-буфер SQLite:</span>
+                  <span style="color:#38bdf8; font-weight:700;">0 записей (Чисто)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button class="btn success" style="flex:1; min-height:50px;" onclick="resumeDriverWork()">
+              ▶ Снять с паузы и продолжить работу
+            </button>
+            <button class="btn danger" onclick="openModal('modal-logout')">
+              Завершить смену / Выход
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================================
+       МОДАЛЬНЫЕ ОКНА: ВИДЕО, NFC, ВЫЗОВ СТАРШЕГО, ПРОФИЛЬ, ВЫХОД
+       ======================================================== -->
+
+  <!-- Модалка видеофиксации Dock Gates -->
+  <div class="modal-overlay" id="modal-incident">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+        <div>
+          <h2 id="modal-inc-title" style="margin-bottom:2px;">Инцидент #NC-1182</h2>
+          <p class="sub" style="margin-bottom:0;" id="modal-inc-ttn">Привязка к накладной: ТТН-492049</p>
+        </div>
+        <button class="btn ghost" style="padding:4px 10px;" onclick="closeModal('modal-incident')">✕</button>
+      </div>
+
+      <div class="video-mock">
+        <div class="video-pulse-record">
+          <span></span> ARCHIVE • DOCK GATES HD
+        </div>
+        <div style="font-size:38px;">🎥</div>
+        <div style="font-weight:700; font-size:13.5px;">10-секундный видеофрагмент прохождения ворот дока</div>
+        <div style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);" id="modal-inc-cam">Камера ворот Dock Gate #02 • Full HD 1080p</div>
+      </div>
+
+      <div style="background:#0c0f17; border:1px solid var(--card-border); border-radius:10px; padding:12px; margin-bottom:16px; font-size:12.5px; line-height:1.6;" id="modal-inc-desc"></div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+        <button class="btn success" onclick="resolveCurrentIncident()">Подтвердить разбор / Закрыть инцидент</button>
+        <button class="btn ghost" onclick="closeModal('modal-incident')">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка NFC / PIN разблокировки терминала (Лаб. №9) -->
+  <div class="modal-overlay" id="modal-nfc">
+    <div class="modal-card" style="max-width:460px;">
+      <h2 style="color:#f87171; display:flex; align-items:center; gap:8px;">
+        <span>🔒</span> NFC-разблокировка блокировки
+      </h2>
+      <p class="sub">Проводка в 1С:WMS заблокирована от топологического пересорта. Приложите карту бригадира к терминалу или введите мастер-PIN.</p>
+
+      <div style="margin:16px 0;">
+        <label>PIN бригадира / начальника смены</label>
+        <input type="password" id="nfc-pin-input" maxlength="4" placeholder="••••" style="font-size:26px; text-align:center; letter-spacing:10px; font-family:var(--font-mono);">
+        <p id="nfc-err-text" style="color:#f87171; font-size:12px; display:none;">Неверный PIN-код (демо: 4829)</p>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn" style="flex:1;" onclick="submitNfcUnlock()">Подтвердить разблокировку</button>
+        <button class="btn ghost" onclick="closeModal('modal-nfc')">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка вызова старшего смены при поврежденном штрихкоде -->
+  <div class="modal-overlay" id="modal-damaged-code">
+    <div class="modal-card" style="max-width:480px;">
+      <h2 style="color:#fbbf24; display:flex; align-items:center; gap:8px;">
+        <span>⚠️</span> Вызов старшего смены: Брак ШК
+      </h2>
+      <p class="sub">Штрихкод палеты повреждён или не распознаётся нейросетью ввиду замятия этикетки.</p>
+
+      <div style="background:#0b0e14; border:1px solid var(--card-border); border-radius:10px; padding:12px; margin-bottom:16px; font-size:13px; line-height:1.6;">
+        <div><strong>Текущее место:</strong> Зона приёмки P-04</div>
+        <div><strong>Связанное задание:</strong> #4829</div>
+        <div style="color:#38bdf8; margin-top:6px;">Снимки с камеры каретки переданы старшему смены приёмки. Ожидайте прибытия контролёра с перемаркировочным сканером.</div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn warn" style="flex:1;" onclick="confirmDamagedCall()">Отправить вызов диспетчеру</button>
+        <button class="btn ghost" onclick="closeModal('modal-damaged-code')">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка профиля -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal-card">
+      <h2>Личный кабинет • Настройки профиля</h2>
+      <p class="sub">Параметры сессии диспетчера и уведомлений</p>
+
+      <label>Ф.И.О. диспетчера</label>
+      <input type="text" id="prof-name" value="Ковалев Григорий Константинович">
+
+      <div class="grid-2">
+        <div>
+          <label>Роль в системе</label>
+          <select id="prof-role">
+            <option>Диспетчер склада</option>
+            <option>Начальник смены</option>
+            <option>Служба безопасности</option>
+          </select>
+        </div>
+        <div>
+          <label>Текущая смена</label>
+          <input type="text" value="Смена 1 (Дневная)">
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+        <button class="btn" onclick="saveProfile()">Сохранить профиль</button>
+        <button class="btn ghost" onclick="closeModal('modal-profile')">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка выхода -->
+  <div class="modal-overlay" id="modal-logout">
+    <div class="modal-card" style="max-width:420px; text-align:center;">
+      <div style="font-size:42px; margin-bottom:10px;">🚪</div>
+      <h2>Выйти из системы?</h2>
+      <p class="sub">Сессия пользователя будет завершена. Все транзакции зафиксированы в 1С:WMS.</p>
+      <div style="display:flex; justify-content:center; gap:10px; margin-top:18px;">
+        <button class="btn danger" onclick="confirmLogout()">Да, выйти</button>
+        <button class="btn ghost" onclick="closeModal('modal-logout')">Остаться</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-msg" id="app-toast">
+    <span id="toast-icon">ℹ️</span>
+    <span id="toast-text">Сообщение системы</span>
+  </div>
+
+  <!-- СКРИПТ ПРИЛОЖЕНИЯ -->
+  <script>
+    // ==========================================
+    // ДАННЫЕ СИСТЕМЫ
+    // ==========================================
+    let tasksData = [
+      { id: 4829, pallet: '4607012345678', place: 'P-04', row: '08', aisle: '14', tier: '05', cell: 'A-14-05', height: '9.2 м', truck: 'Ричтрак №04', status: 'active' },
+      { id: 4830, pallet: '4607012345685', place: 'P-07', row: '08', aisle: '14', tier: '07', cell: 'A-14-07', height: '12.1 м', truck: 'Ричтрак №04', status: 'queue' },
+      { id: 4831, pallet: '4607012345692', place: 'P-02', row: '08', aisle: '15', tier: '03', cell: 'A-15-03', height: '5.4 м', truck: 'Ричтрак №07', status: 'queue' }
+    ];
+
+    let incidentsData = [
+      {
+        id: 'INC-101',
+        title: 'Топологическое несоответствие (Блокировка)',
+        details: 'Целевая ячейка A-14-05, наведено на ярус A-14-06 (смежный ярус). Проводка в 1С заблокирована.',
+        where: 'Ряд 08, пролёт 14, ярус 06 • Ричтрак №04',
+        fix: 'Опустить мачту на один ярус вниз (ярус 05) и повторить совмещение вил',
+        whoHelp: 'Водитель ричтрака №04 (Алексей)',
+        ttn: 'ТТН №1182 • Палета 4607012345678',
+        video: 'Камера каретки Forklift Vision & Dock Gate #01'
+      },
+      {
+        id: 'INC-102',
+        title: 'Повреждён штрихкод палеты',
+        details: 'Штрихкод замятой этикетки в зоне приёмки P-04 не считывается камерой каретки.',
+        where: 'Зона приёмки P-04 • Палетоместо 04',
+        fix: 'Проверить палету по ТТН, произвести ручную перемаркировку и замену стикера',
+        whoHelp: 'Старший смены приёмки',
+        ttn: 'ТТН №1180 • Палета 4607012345678',
+        video: 'Dock Gate #03 • Видео 10 сек'
+      },
+      {
+        id: 'INC-103',
+        title: 'Работа в офлайн-буфере (Потеря Wi-Fi)',
+        details: 'Ричтрак №07 находился в экранированном проезде сектора B. 2 транзакции сохранены в локальный SQLite.',
+        where: 'Сектор В • Ричтрак №07',
+        fix: 'Связь восстановлена, проверить завершение фонового сброса буфера в 1C:WMS',
+        whoHelp: 'Водитель ричтрака №07 (Сергей)',
+        ttn: 'ТТН №1175',
+        video: 'Событие буфера SQLite (200 OK)'
+      }
+    ];
+
+    let currentIncidentIndex = 0;
+    let completedCount = 36;
+    let currentTaskIndex = 0;
+
+    // Состояние водителя и терминала
+    let currentDriverName = 'Алексей Воронов';
+    let currentTruckName = 'Ричтрак №04';
+    let driverPlacedToday = 14;
+
+    // Стадии HMI: 'w1_capture' | 'w2_route' | 'w3_green' | 'w4_red' | 'w5_done'
+    let terminalStage = 'w1_capture';
+    let isTerminalOffline = false;
+    let terminalBufferCount = 0;
+    let wrongCellDetected = 'A-14-06';
+
+    // ==========================================
+    // ПЕРЕКЛЮЧЕНИЕ ГЛАВНЫХ ВКЛАДОК
+    // ==========================================
+    function switchMainTab(tabId) {
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.app-nav button').forEach(btn => btn.classList.remove('active'));
+
+      const targetSection = document.getElementById('view-' + tabId);
+      const targetBtn = document.getElementById('nav-btn-' + tabId);
+
+      if (targetSection) targetSection.classList.add('active');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      if (tabId === 'disp') renderDispatcherDashboard();
+      if (tabId === 'tasks') renderFullTasksTable();
+      if (tabId === 'inc') renderIncidentsView();
+      if (tabId === 'help') renderHelpView();
+      if (tabId === 'driver') renderTerminalScreen();
+    }
+
+    // ==========================================
+    // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ ВОДИТЕЛЯ
+    // ==========================================
+    function switchDriverScreen(screenKey) {
+      const screens = ['login', 'dash', 'hmi', 'pause'];
+      screens.forEach(s => {
+        const el = document.getElementById('driver-screen-' + s);
+        const btn = document.getElementById('dtab-' + s);
+        if (el) el.style.display = s === screenKey ? 'block' : 'none';
+        if (btn) btn.classList.toggle('active', s === screenKey);
+      });
+
+      if (screenKey === 'dash') renderDriverDashboard();
+      if (screenKey === 'hmi') renderTerminalScreen();
+    }
+
+    function performDriverLogin() {
+      const pin = document.getElementById('login-driver-pin').value.trim();
+      if (pin.length !== 4) {
+        document.getElementById('login-pin-err').style.display = 'block';
+        return;
+      }
+      document.getElementById('login-pin-err').style.display = 'none';
+      currentDriverName = document.getElementById('login-driver-name').value;
+      currentTruckName = document.getElementById('login-truck-select').value;
+      
+      document.getElementById('term-truck-name').textContent = currentTruckName.toUpperCase();
+      document.getElementById('dash-driver-label').textContent = currentDriverName;
+      document.getElementById('dash-truck-label').textContent = `Техника: ${currentTruckName} • Сектор: Зона приёмки и Стеллажи A-08`;
+
+      showToast(`🚜 Вход выполнен: ${currentDriverName} (${currentTruckName})`);
+      switchDriverScreen('dash');
+    }
+
+    function renderDriverDashboard() {
+      document.getElementById('driver-stat-done').textContent = driverPlacedToday;
+      const truckTasks = tasksData.filter(t => t.truck === currentTruckName || t.truck.includes('04'));
+      document.getElementById('driver-stat-queue').textContent = truckTasks.filter(t => t.status !== 'done').length;
+
+      const tbody = document.getElementById('driver-tasks-tbody');
+      tbody.innerHTML = truckTasks.map((t, idx) => `
+        <tr>
+          <td><strong>#${t.id}</strong></td>
+          <td style="font-family:var(--font-mono);">${t.pallet}</td>
+          <td>${t.place}</td>
+          <td><strong style="color:#fbbf24;">${t.cell}</strong> (Ярус ${t.tier})</td>
+          <td>${t.height}</td>
+          <td>
+            ${t.status === 'done' 
+              ? '<span class="tag ok">Выполнено</span>' 
+              : `<button class="btn" style="padding:6px 12px; font-size:12px;" onclick="selectDriverTask(${idx})">Взять в работу →</button>`}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function selectDriverTask(idx) {
+      currentTaskIndex = idx;
+      terminalStage = 'w1_capture';
+      switchDriverScreen('hmi');
+      showToast(`Начато выполнение задания #${tasksData[idx].id}`);
+    }
+
+    function startCurrentTaskFromDash() {
+      switchDriverScreen('hmi');
+    }
+
+    function resumeDriverWork() {
+      switchDriverScreen('hmi');
+      showToast('▶ Смена возобновлена');
+    }
+
+    // ==========================================
+    // ЛОГИКА HMI ТЕРМИНАЛА (W1-W5)
+    // ==========================================
+    function curTask() {
+      return tasksData[currentTaskIndex] || tasksData[0];
+    }
+
+    function setTerminalStepPills(stepNum) {
+      for (let i = 1; i <= 4; i++) {
+        const p = document.getElementById('pill-step-' + i);
+        if (!p) continue;
+        p.className = 'term-step-pill';
+        if (i < stepNum) p.classList.add('done');
+        if (i === stepNum) p.classList.add('active');
+      }
+    }
+
+    function renderTerminalScreen() {
+      const screen = document.getElementById('term-screen-body');
+      if (!screen) return;
+      const t = curTask();
+      screen.className = 'term-screen';
+
+      document.getElementById('term-buffer-pill').textContent = `Буфер: ${terminalBufferCount} паллет`;
+      document.getElementById('term-wifi-status').innerHTML = isTerminalOffline 
+        ? '<span style="color:#fbbf24;">⚠ Автономно (SQLite)</span>' 
+        : '<span style="color:#34d399;">● Wi-Fi: OK</span>';
+
+      // ЭКРАН W1
+      if (terminalStage === 'w1_capture') {
+        setTerminalStepPills(1);
+        screen.innerHTML = `
+          <div>
+            <div style="color:#94a3b8; font-size:12px; font-weight:700; text-transform:uppercase;">НОВОЕ ЗАДАНИЕ #${t.id}</div>
+            <h1 style="margin:4px 0 14px;">Подхватите груз</h1>
+            <div class="grid-2">
+              <div style="background:#0b0e14; border:1px solid #232a3b; border-radius:14px; padding:20px;">
+                <div style="color:#94a3b8; font-size:12px; font-weight:700;">ЗОНА ПРИЁМКИ / ПАЛЕТОМЕСТО</div>
+                <div style="font-size:clamp(44px, 5vw, 64px); font-weight:900; color:#fbbf24; font-family:var(--font-mono); margin:6px 0;">${t.place}</div>
+                <div style="font-size:15px; color:#e2e8f0;">Наведите вилы на палету поддона</div>
+                <div style="margin-top:12px; display:inline-flex; align-items:center; gap:8px; color:#34d399; font-size:12.5px; font-family:var(--font-mono);">
+                  <span style="width:8px; height:8px; border-radius:50%; background:#34d399; display:inline-block;"></span>
+                  Камера каретки считывает штрихкод автоматически
+                </div>
+              </div>
+              <div style="background:#0b0e14; border:1px solid #232a3b; border-radius:14px; padding:20px; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="color:#94a3b8; font-size:12px; font-weight:700;">РАСПОЗНАВАНИЕ ГРУЗА</div>
+                  <div style="font-size:18px; font-weight:700; margin-top:6px;">Ожидание захвата камерой...</div>
+                  <p style="font-size:12.5px; color:#64748b; margin-top:4px;">Задержка инференса YOLOv8 &lt; 200 мс</p>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
+                  <button class="term-btn-industrial btn success" style="flex:1;" onclick="simulatePalletCaptured()">
+                    ⚡ Имитировать захват палеты
+                  </button>
+                  <button class="term-btn-industrial btn danger" style="padding:16px;" onclick="openModal('modal-damaged-code')" title="Повреждён штрихкод">
+                    ⚠️ Повреждён ШК
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12px; color:#64748b; margin-top:12px;">
+            Zero-Touch Scanning: водителю не требуется сканер ТСД или нажатие кнопок на ходу.
+          </div>
+        `;
+      }
+
+      // ЭКРАН W2
+      else if (terminalStage === 'w2_route') {
+        setTerminalStepPills(2);
+        screen.innerHTML = `
+          <div>
+            <div style="color:#34d399; font-size:12.5px; font-weight:700; font-family:var(--font-mono); display:flex; align-items:center; gap:8px;">
+              <span>✓</span> ГРУЗ ИДЕНТИФИЦИРОВАН: ШК ${t.pallet} (OK)
+            </div>
+            <h1 style="margin:4px 0 14px;">Доставьте груз к ячейке</h1>
+
+            <div class="grid-2">
+              <div style="background:#0b0e14; border:1px solid #232a3b; border-radius:14px; padding:20px;">
+                <div style="color:#94a3b8; font-size:12px; font-weight:700;">ЦЕЛЕВАЯ ЯЧЕЙКА ХРАНЕНИЯ</div>
+                <div class="term-cell-giant">${t.cell}</div>
+                <div><span class="badge-tier">ЯРУС ${t.tier}</span></div>
+                <div style="font-size:14px; color:#cbd5e1;">РЯД ${t.row} • ПРОЛЁТ ${t.aisle} • ВЫСОТА ПОДЪЁМА ≈ ${t.height}</div>
+              </div>
+
+              <div style="background:#0b0e14; border:1px solid #232a3b; border-radius:14px; padding:20px;">
+                <div style="color:#94a3b8; font-size:12px; font-weight:700;">СИМУЛЯТОР НАВЕДЕНИЯ КАМЕРЫ (OCR)</div>
+                <p style="font-size:12.5px; color:#94a3b8; margin:6px 0 12px;">
+                  На какую ячейку наведена каретка мачты? (Жёлтым выделена цель):
+                </p>
+                
+                <div class="rack-simulator">
+                  ${[1, 2, 3, 4, 5, 6, 7].map(n => {
+                    const cellName = `A-${t.aisle}-0${n}`;
+                    const isTarget = cellName === t.cell;
+                    return `
+                      <button class="rack-cell-btn ${isTarget ? 'target' : ''}" onclick="simulateCellAim('${cellName}')">
+                        ${cellName}
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+
+                <div style="font-size:11.5px; color:#64748b; line-height:1.5;">
+                  Нажмите на <strong>${t.cell}</strong> для подтверждения ячейки (зелёный экран W3) или на соседнюю для симуляции блокировки пересорта (красный экран W4).
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12px; color:#64748b; margin-top:12px;">
+            Поднимайте мачту к целевой полке. Распознавание метки OCR начнётся автоматически при подъёме.
+          </div>
+        `;
+      }
+
+      // ЭКРАН W3
+      else if (terminalStage === 'w3_green') {
+        setTerminalStepPills(3);
+        screen.classList.add('state-green');
+        screen.innerHTML = `
+          <div style="text-align:center; padding:10px 0;">
+            <div style="font-size:16px; font-family:var(--font-mono); color:#a7f3d0; font-weight:700;">
+              РАСПОЗНАН АДРЕС: [ ${t.cell} ] === ЦЕЛЬ: [ ${t.cell} ]
+            </div>
+            <div style="font-size:clamp(40px, 5.5vw, 68px); font-weight:900; color:#fff; letter-spacing:-0.02em; margin:8px 0;">
+              ЯЧЕЙКА ВЕРНА!
+            </div>
+            <div style="font-size:clamp(20px, 2.5vw, 30px); font-weight:800; color:#34d399; margin-bottom:18px;">
+              ЗАВОДИТЕ ВИЛЫ В ПОЛКУ
+            </div>
+            <p style="font-size:14.5px; color:#d1fae5; max-width:600px; margin:0 auto 24px; line-height:1.5;">
+              Камера зафиксировала совпадение. Алгоритм Optical Flow ожидает завершения ввода вил и снятия нагрузки поддона.
+            </p>
+
+            <button class="term-btn-industrial btn success" style="font-size:clamp(16px, 1.8vw, 20px); padding:16px 36px;" onclick="simulateForkInsertion()">
+              ✓ Ввести вилы и завершить размещение (Optical Flow)
+            </button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:11.5px; color:#a7f3d0;">Блокировка проводки отключена • 200 OK</span>
+            <button class="btn ghost" style="padding:6px 14px; font-size:12px;" onclick="terminalStage='w2_route'; renderTerminalScreen();">
+              ← Назад к наведению
+            </button>
+          </div>
+        `;
+      }
+
+      // ЭКРАН W4
+      else if (terminalStage === 'w4_red') {
+        setTerminalStepPills(3);
+        screen.classList.add('state-red');
+        screen.innerHTML = `
+          <div style="text-align:center; padding:6px 0;">
+            <div style="font-size:14px; font-family:var(--font-mono); color:#fecaca; font-weight:800; letter-spacing:0.08em;">
+              ПРОВОДКА В 1С:WMS ЗАБЛОКИРОВАНА. НЕ СТАВЬТЕ ГРУЗ!
+            </div>
+            <div style="font-size:clamp(32px, 4.8vw, 56px); font-weight:900; color:#fff; margin:8px 0;">
+              ВНИМАНИЕ! НЕСОВПАДЕНИЕ!
+            </div>
+            
+            <div style="background:rgba(0,0,0,0.4); border:2px solid rgba(239,68,68,0.5); border-radius:14px; max-width:660px; margin:0 auto 16px; padding:16px;">
+              <div style="font-size:clamp(16px, 2vw, 20px); color:#fca5a5;">
+                ТЕКУЩАЯ ПОЛКА: <strong style="color:#fff; font-size:clamp(20px, 2.4vw, 26px); font-family:var(--font-mono);">${wrongCellDetected}</strong> 
+                <span style="color:#ef4444; font-weight:800;">(ОШИБКА, СМЕЖНЫЙ ЯРУС)</span>
+              </div>
+              <div style="font-size:clamp(15px, 1.8vw, 18px); color:#cbd5e1; margin-top:6px;">
+                ТРЕБУЕТСЯ: <strong style="color:#fbbf24; font-size:clamp(18px, 2.2vw, 24px); font-family:var(--font-mono);">${t.cell}</strong> (Ярус ${t.tier})
+              </div>
+              <div style="font-size:15px; color:#fff; font-weight:700; margin-top:10px;">
+                👉 Опустите мачту на один ярус ниже (ярус 05)!
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+              <button class="term-btn-industrial btn" style="background:#eab308; color:#000;" onclick="terminalStage='w2_route'; renderTerminalScreen();">
+                ↺ Исправить высоту / Пересканировать
+              </button>
+              <button class="term-btn-industrial btn danger" onclick="openModal('modal-nfc')">
+                🔒 Разблокировка по NFC / PIN бригадира
+              </button>
+            </div>
+          </div>
+          <div style="font-size:11.5px; color:#fecaca; text-align:center; margin-top:8px;">
+            Инцидент пересорта автоматически залогирован в журнале диспетчера с привязкой к ТТН.
+          </div>
+        `;
+      }
+
+      // ЭКРАН W5
+      else if (terminalStage === 'w5_done') {
+        setTerminalStepPills(4);
+        screen.innerHTML = `
+          <div style="text-align:center; padding:20px 0;">
+            <div style="font-size:48px; margin-bottom:8px;">✅</div>
+            <h1 style="color:#34d399; margin-bottom:8px;">Размещение подтверждено</h1>
+            <p style="font-size:16px; color:#cbd5e1; max-width:620px; margin:0 auto 16px;">
+              Палета <strong style="color:#fff; font-family:var(--font-mono);">${t.pallet}</strong> успешно закреплена за ячейкой <strong style="color:#fbbf24; font-family:var(--font-mono);">${t.cell}</strong>.
+            </p>
+            <div style="background:#0b0e14; border:1px solid #232a3b; border-radius:12px; padding:14px; max-width:540px; margin:0 auto 24px; font-size:12.5px; color:#94a3b8; font-family:var(--font-mono); line-height:1.5;">
+              Optical Flow: вилы выведены из полки, нагрузка снята.<br>
+              ${isTerminalOffline ? 'Транзакция помещена в локальный буфер SQLite (офлайн).' : 'Статус в 1С:WMS обновлён: 200 OK (Синхронизировано).'}
+            </div>
+
+            <button class="term-btn-industrial btn" style="padding:16px 36px;" onclick="goToNextTerminalTask()">
+              К следующему заданию смены →
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function simulatePalletCaptured() {
+      showToast('📸 Камера считала штрихкод палеты 4607012345678 (200 мс)');
+      terminalStage = 'w2_route';
+      renderTerminalScreen();
+    }
+
+    function simulateCellAim(cellName) {
+      const t = curTask();
+      if (cellName === t.cell) {
+        showToast('🎯 Ячейка верна: A-14-05 совпала с заданием');
+        terminalStage = 'w3_green';
+      } else {
+        wrongCellDetected = cellName;
+        showToast('🚨 Ошибка адреса: проводка в 1C:WMS заблокирована!', 'err');
+        terminalStage = 'w4_red';
+        if (!incidentsData.some(x => x.details.includes(cellName))) {
+          incidentsData.unshift({
+            id: 'INC-' + Date.now().toString().slice(-3),
+            title: 'Топологическое несоответствие',
+            details: `Целевая ячейка ${t.cell}, наведено на ${cellName}. Блокировка проводки.`,
+            where: `Ряд ${t.row}, пролёт ${t.aisle} • ${currentTruckName}`,
+            fix: `Опустить мачту на ярус ${t.tier}`,
+            whoHelp: `Водитель ${currentTruckName}`,
+            ttn: `ТТН №1182 • Палета ${t.pallet}`,
+            video: 'Forklift Vision & Dock Gates'
+          });
+          renderDispatcherDashboard();
+        }
+      }
+      renderTerminalScreen();
+    }
+
+    function simulateForkInsertion() {
+      const t = curTask();
+      t.status = 'done';
+      completedCount++;
+      driverPlacedToday++;
+      if (isTerminalOffline) {
+        terminalBufferCount++;
+      }
+      showToast('📦 Палета закреплена в 1С:WMS! Задание завершено.');
+      terminalStage = 'w5_done';
+      renderTerminalScreen();
+      renderDispatcherDashboard();
+    }
+
+    function goToNextTerminalTask() {
+      if (currentTaskIndex < tasksData.length - 1) {
+        currentTaskIndex++;
+        tasksData[currentTaskIndex].status = 'active';
+        terminalStage = 'w1_capture';
+        showToast(`📋 Загружено задание #${tasksData[currentTaskIndex].id}`);
+      } else {
+        terminalStage = 'w1_capture';
+        showToast('🎉 Все сменные задания выполнены!');
+      }
+      renderTerminalScreen();
+      renderDispatcherDashboard();
+    }
+
+    function confirmDamagedCall() {
+      closeModal('modal-damaged-code');
+      showToast('🚨 Вызов диспетчеру отправлен! Зафиксирован инцидент приёмки.');
+      incidentsData.unshift({
+        id: 'INC-' + Date.now().toString().slice(-3),
+        title: 'Повреждён штрихкод палеты',
+        details: 'Штрихкод в зоне приёмки P-04 не читается камерой каретки.',
+        where: 'Зона приёмки P-04',
+        fix: 'Ручная перемаркировка старшим смены',
+        whoHelp: 'Старший смены приёмки',
+        ttn: 'ТТН №1180',
+        video: 'Dock Gate #01'
+      });
+      renderDispatcherDashboard();
+    }
+
+    function toggleTerminalWifi() {
+      isTerminalOffline = !isTerminalOffline;
+      const btn = document.getElementById('term-wifi-btn');
+      if (isTerminalOffline) {
+        btn.textContent = '📶 Wi-Fi: Офлайн (SQLite)';
+        btn.style.borderColor = '#fbbf24';
+        btn.style.color = '#fbbf24';
+        showToast('⚠️ Офлайн-режим. Транзакции пишутся в локальный SQLite.');
+      } else {
+        btn.textContent = '📶 Wi-Fi: В сети';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        if (terminalBufferCount > 0) {
+          showToast(`🔄 Связь восстановлена! ${terminalBufferCount} транзакций отправлены в 1С:WMS.`);
+          terminalBufferCount = 0;
+        } else {
+          showToast('✅ Связь восстановлена. Синхронизация 1C:WMS активна.');
+        }
+      }
+      renderTerminalScreen();
+      renderDispatcherDashboard();
+    }
+
+    function resetTerminalDemo() {
+      currentTaskIndex = 0;
+      completedCount = 36;
+      driverPlacedToday = 14;
+      tasksData.forEach((t, i) => t.status = i === 0 ? 'active' : 'queue');
+      terminalStage = 'w1_capture';
+      renderTerminalScreen();
+      renderDispatcherDashboard();
+      showToast('🔄 Демонстрационный сценарий сброшен');
+    }
+
+    // ==========================================
+    // РЕНДЕР ДИСПЕТЧЕРСКИХ ДАННЫХ
+    // ==========================================
+    function renderDispatcherDashboard() {
+      document.getElementById('kpi-total-tasks').textContent = 48;
+      document.getElementById('kpi-done-tasks').textContent = completedCount;
+      document.getElementById('kpi-incidents-count').textContent = incidentsData.length;
+      document.getElementById('disp-buf-count').textContent = terminalBufferCount;
+
+      const tbody = document.getElementById('disp-recent-tasks');
+      tbody.innerHTML = tasksData.map(t => `
+        <tr>
+          <td><strong>#${t.id}</strong></td>
+          <td><span style="font-family:var(--font-mono); font-size:12px;">${t.pallet}</span></td>
+          <td>${t.place} → <strong>${t.cell}</strong></td>
+          <td>
+            ${t.status === 'done' 
+              ? '<span class="tag ok">Выполнено</span>' 
+              : t.status === 'active' 
+              ? '<span class="tag ok">В работе</span>' 
+              : '<span class="tag queue">В очереди</span>'}
+          </td>
+        </tr>
+      `).join('');
+
+      const incBox = document.getElementById('disp-incident-cards');
+      if (incidentsData.length === 0) {
+        incBox.innerHTML = `
+          <div style="text-align:center; padding:24px; color:var(--text-muted);">
+            <div style="font-size:28px; margin-bottom:6px;">✅</div>
+            <strong>За смену инцидентов нет</strong>
+            <p style="font-size:12px; margin-top:4px;">Топологический пересорт устранён, WMS синхронизирована.</p>
+          </div>
+        `;
+      } else {
+        incBox.innerHTML = incidentsData.map((inc, i) => `
+          <div style="background:#0b0e14; border:1px solid ${i===0 ? 'rgba(239, 68, 68, 0.4)' : 'var(--card-border)'}; border-left:4px solid ${i===0 ? 'var(--status-err)' : 'var(--status-warn)'}; border-radius:10px; padding:12px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+              <strong style="font-size:13px; color:#fff;">${inc.title}</strong>
+              <button class="btn ghost" style="padding:3px 8px; font-size:11px;" onclick="openIncidentDetails(${i})">Разбор & Видео →</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin:4px 0;">${inc.details}</div>
+            <div style="font-size:11px; color:#94a3b8; font-family:var(--font-mono);">Локация: ${inc.where}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderFullTasksTable() {
+      const tbody = document.getElementById('full-tasks-table');
+      tbody.innerHTML = tasksData.map(t => `
+        <tr>
+          <td><strong>#${t.id}</strong></td>
+          <td style="font-family:var(--font-mono);">${t.pallet}</td>
+          <td>${t.place}</td>
+          <td><strong style="color:#fbbf24;">${t.cell}</strong></td>
+          <td>${t.truck}</td>
+          <td>${t.height}</td>
+          <td>
+            ${t.status === 'done' 
+              ? '<span class="tag ok">200 OK (Размещено)</span>' 
+              : t.status === 'active' 
+              ? '<span class="tag ok">В процессе подъёма</span>' 
+              : '<span class="tag queue">Ожидает ричтрак</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderIncidentsView() {
+      const container = document.getElementById('incidents-container');
+      if (incidentsData.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:40px 16px;">
+            <div style="font-size:42px; margin-bottom:10px;">🎉</div>
+            <h2>За смену инцидентов нет</h2>
+            <p class="sub">Топологический пересорт не зафиксирован. Все размещения подтверждены в 1С:WMS.</p>
+            <button class="btn ghost" onclick="switchMainTab('disp')">Вернуться на дашборд</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Инцидент</th>
+                <th>Локация ошибки</th>
+                <th>Кому направлена помощь</th>
+                <th>Доказательная база</th>
+                <th>Действие</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${incidentsData.map((x, i) => `
+                <tr>
+                  <td>
+                    <strong style="color:#f87171;">${x.title}</strong><br>
+                    <span style="font-size:12px; color:var(--text-muted);">${x.details}</span>
+                  </td>
+                  <td>${x.where}</td>
+                  <td><span class="tag queue">${x.whoHelp}</span></td>
+                  <td style="font-family:var(--font-mono); font-size:12px;">${x.ttn}</td>
+                  <td><button class="btn ghost" style="padding:6px 10px; font-size:12px;" onclick="openIncidentDetails(${i})">Карточка & Видео</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderHelpView() {
+      const list = document.getElementById('help-cards-list');
+      if (incidentsData.length === 0) {
+        list.innerHTML = `<div class="card" style="grid-column:1/-1; text-align:center;"><p class="sub">Помощь никому не требуется. Смена работает в штатном режиме.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = incidentsData.map(item => `
+        <div class="card" style="border-left:4px solid var(--accent-blue);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <h2 style="font-size:15.5px; margin:0;">${item.title}</h2>
+            <span class="tag err">ОШИБКА</span>
+          </div>
+          <div style="font-size:13px; line-height:1.6; margin-bottom:12px;">
+            <p><strong>ГДЕ:</strong> ${item.where}</p>
+            <p style="margin-top:4px;"><strong>ЧТО ИСПРАВИТЬ:</strong> ${item.fix}</p>
+            <p style="margin-top:4px; color:#38bdf8;"><strong>КОМУ ПОМОЧЬ:</strong> ${item.whoHelp}</p>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
+            Привязка: ${item.ttn}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ==========================================
+    // МОДАЛКИ И ФОРМЫ
+    // ==========================================
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('open');
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+    }
+
+    function openIncidentDetails(index) {
+      currentIncidentIndex = index;
+      const inc = incidentsData[index];
+      if (!inc) return;
+
+      document.getElementById('modal-inc-title').textContent = inc.title;
+      document.getElementById('modal-inc-ttn').textContent = inc.ttn;
+      document.getElementById('modal-inc-desc').innerHTML = `
+        <p><strong>Суть нарушения:</strong> ${inc.details}</p>
+        <p style="margin-top:6px;"><strong>Локация:</strong> ${inc.where}</p>
+        <p style="margin-top:6px;"><strong>Регламент исправления (СОП-01):</strong> ${inc.fix}</p>
+        <p style="margin-top:6px; color:#38bdf8;"><strong>Ответственный:</strong> ${inc.whoHelp}</p>
+      `;
+      openModal('modal-incident');
+    }
+
+    function resolveCurrentIncident() {
+      incidentsData.splice(currentIncidentIndex, 1);
+      closeModal('modal-incident');
+      renderDispatcherDashboard();
+      renderIncidentsView();
+      renderHelpView();
+      showToast('✓ Инцидент разобран и закрыт в журнале аудита');
+    }
+
+    function submitNfcUnlock() {
+      const pin = document.getElementById('nfc-pin-input').value.trim();
+      if (pin === '4829' || pin.length === 4) {
+        document.getElementById('nfc-err-text').style.display = 'none';
+        closeModal('modal-nfc');
+        document.getElementById('nfc-pin-input').value = '';
+        showToast('🔓 Авторизация бригадира подтверждена. Блокировка снята.');
+        terminalStage = 'w2_route';
+        renderTerminalScreen();
+      } else {
+        document.getElementById('nfc-err-text').style.display = 'block';
+      }
+    }
+
+    function handleCreateTask(e) {
+      e.preventDefault();
+      const barcode = document.getElementById('form-barcode').value.trim();
+      const place = document.getElementById('form-place').value;
+      const cell = document.getElementById('form-cell').value.trim();
+      const truck = document.getElementById('form-truck').value;
+
+      const newId = 4829 + tasksData.length;
+      tasksData.push({
+        id: newId,
+        pallet: barcode,
+        place: place,
+        row: '08',
+        aisle: '14',
+        tier: '05',
+        cell: cell,
+        height: '9.2 м',
+        truck: truck,
+        status: 'queue'
+      });
+
+      showToast(`✅ Задание #${newId} создано и передано в очередь MQTT`);
+      switchMainTab('tasks');
+    }
+
+    function openProfile() {
+      openModal('modal-profile');
+    }
+
+    function saveProfile() {
+      const name = document.getElementById('prof-name').value;
+      const role = document.getElementById('prof-role').value;
+      document.getElementById('user-display').textContent = `${name} • ${role}`;
+      closeModal('modal-profile');
+      showToast('Профиль сохранён');
+    }
+
+    function confirmLogout() {
+      closeModal('modal-logout');
+      showToast('Сеанс завершён');
+      document.getElementById('user-display').textContent = 'Не выполнен вход';
+    }
+
+    function showToast(text, type = 'info') {
+      const t = document.getElementById('app-toast');
+      const icon = document.getElementById('toast-icon');
+      const msg = document.getElementById('toast-text');
+
+      icon.textContent = type === 'err' ? '🚨' : 'ℹ️';
+      msg.textContent = text;
+      t.style.display = 'flex';
+
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        t.style.display = 'none';
+      }, 3500);
+    }
+
+    // Часы
+    setInterval(() => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ru-RU', { hour12: false });
+      const clockEl = document.getElementById('term-clock');
+      if (clockEl) clockEl.textContent = timeStr;
+    }, 1000);
+
+    // Первоначальный рендер
+    renderDispatcherDashboard();
+    renderTerminalScreen();
+  </script>
+</body>
+</html>
